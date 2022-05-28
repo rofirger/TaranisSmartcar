@@ -54,9 +54,17 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 	        target_pwm_right = 0;
 	    pwm_duty(ATOM0_CH4_P02_4, target_pwm_right);    // 右轮前进
 	    pwm_duty(ATOM0_CH5_P02_5, target_pwm_left);    // 左轮前进
+	    if (target_pwm_left < 0)
+	    {
+	        pwm_duty(ATOM0_CH6_P02_6, -target_pwm_left);    // 左轮前进
+	    }
+	    if (target_pwm_right < 0)
+	    {
+	        pwm_duty(ATOM0_CH7_P02_7, -target_pwm_right);    // 右轮后退
+	    }
 	}
-	lcd_showint16(0, 4, left_encoder);
-	lcd_showint16(0, 5, right_encoder);
+	//lcd_showint16(0, 4, left_encoder);
+	//lcd_showint16(0, 5, right_encoder);
 	gpt12_clear(GPT12_T2);
 	gpt12_clear(GPT12_T4);
 }
