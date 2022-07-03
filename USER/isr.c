@@ -118,6 +118,7 @@ IFX_INTERRUPT(eru_ch1_ch5_isr, 0, ERU_CH1_CH5_INT_PRIO)
 
 	if(GET_GPIO_FLAG(ERU_CH5_REQ1_P15_8))//Í¨µÀ5ÖÐ¶Ï
 	{
+	    eru_triggered();
 		CLEAR_GPIO_FLAG(ERU_CH5_REQ1_P15_8);
 	}
 }

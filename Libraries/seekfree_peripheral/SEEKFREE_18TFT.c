@@ -589,7 +589,7 @@ void lcd_displayimage032(uint8 *p, uint16 width, uint16 height)
     uint16 coord_y = 0;
 
     
-    if(0==TFT_DISPLAY_DIR || 1==TFT_DISPLAY_DIR)//ÊúÆÁ
+    if(0==TFT_DISPLAY_DIR)//ÊúÆÁ
     {
         coord_x = height>TFT_X_MAX?TFT_X_MAX:height;
         coord_y = width>TFT_Y_MAX?TFT_Y_MAX:width;

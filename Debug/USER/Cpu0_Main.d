@@ -10,3 +10,5 @@ Cpu0_Main.o :	../USER/Config.h
 ../USER/Config.h :
 Cpu0_Main.o :	../USER/fuzzy_pid.h
 ../USER/fuzzy_pid.h :
+Cpu0_Main.o :	../USER/TFT_GUI.h
+../USER/TFT_GUI.h :
