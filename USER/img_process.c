@@ -1919,9 +1919,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             }
             if (end_src_rows < 3 && right_line_begin_ > (src_rows - src_rows / 4))
             {
-                StraightLineCoeffic straight_line_coeffic = LinearRegress(right_line, end_src_rows + 15,
+                StraightLineCoeffic straight_line_coeffic = LinearRegress(right_line, end_src_rows + 10,
                         right_line_begin_);
-                uint8_t n = end_src_rows + 15;
+                uint8_t n = end_src_rows + 10;
                 uint8_t num_err = 0;
                 for (n; n < right_line_begin_; ++n)
                 {
@@ -1938,7 +1938,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
             int16_t left_line_zero_min_rows = 0;
             int16_t j = src_rows - 1;
-            float k_out_rotary = 2.4;
+            float k_out_rotary = 2.9;
             float a_out_rotary = (int16_t) src_cols - k_out_rotary * (src_rows - 1);
             for (int16_t i = left_line_zero_min_rows; i < src_rows; ++i)
             {
@@ -2073,7 +2073,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
             }
 
-            float k_out_rotary = -2.4;
+            float k_out_rotary = -2.9;
             float a_out_rotary = -k_out_rotary * (src_rows - 1);
             for (int16_t i = 0; i < src_rows; ++i)
             {
@@ -2337,7 +2337,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         }
 
         // ¼ÆËãÐ±ÂÊ
-        uint8_t cur_cal_end_point = (src_rows >> 2) * 3;
+        uint8_t cur_cal_end_point = (src_rows >> 2) * 3 - 2;
         uint8_t cur_cal_start_point = src_rows - 2;
         cur_cal_end_point = (cur_cal_end_point < end_src_rows) ? (end_src_rows - 2) : cur_cal_end_point;
         if (cur_cal_end_point < (cur_cal_start_point - 15))
