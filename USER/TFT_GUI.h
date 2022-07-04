@@ -22,6 +22,13 @@ extern int16 control_duty;
 //当前菜单的坐标
 extern uint8 location[2];
 extern uint8 wifiInitOK;
+
+
+//PID矩阵
+extern uint8 PID_Matrix1[7][7],PID_Matrix2[7][7],PID_Matrix3[7][7];
+extern float PID_Matrix4[3][4];
+
+
 //初始化TFT屏幕
 void GUI_init(ERU_PIN_enum eru_pin);
 //当遥控接收器的引脚中断被触发时调用此函数
@@ -54,6 +61,14 @@ void sentImageToWifi(uint8 [][188]);
 void sentCharToWifi(uint8);
 void receivedWithoutGUI(uint8,uint8);
 //page2触发control模式;
+
+uint8 GET_NUMBER(double, int);
+void PID_Matrix1_val(uint8 *PID_Matrix11);
+void PID_Matrix2_val(uint8 *PID_Matrix22);
+void PID_Matrix3_val(uint8 *PID_Matrix33);
+void PID_Matrix4_val(float *PID_Matrix44);
+
+
 static void controlLeft();
 static void controlRight();
 static void controlForward();

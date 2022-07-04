@@ -56,6 +56,11 @@ static uint8 controlFlag = 0;
 //settingBit表示正在设置的位,取值范围0~7
 static uint8 settingBit = 0;
 uint8 wifiInitOK=0;
+
+
+uint8 PID_Matrix1[7][7],PID_Matrix2[7][7],PID_Matrix3[7][7];
+float PID_Matrix4[3][4];
+
 //初始化TFT屏幕
 void GUI_init (ERU_PIN_enum eru_pin)
 {
@@ -903,45 +908,45 @@ void page_init ()
     str_cpy(page0[2], "Control Mode", 12);
     str_cpy(page0[3], "Inductor Test", 13);
     str_cpy(page1[0], "Return || Page 1", 16);        //paraXX中的XX是数组索引，paraData[XX]
-    str_cpy(page1[1], "BCurre:", 7);
-    str_cpy(page1[2], "BSpd_P:", 7);
-    str_cpy(page1[3], "BSpd_I:", 7);
-    str_cpy(page1[4], "BL_Dir:", 7);
-    str_cpy(page1[5], "BLBalP:", 7);
-    str_cpy(page1[6], "BLBalI:", 7);
-    str_cpy(page1[7], "BLBalD:", 7);
-    str_cpy(page1[8], "ARatio:", 7);
-    str_cpy(page1[9], "GRatio:", 7);
+    str_cpy(page1[1], "line_1:", 7);
+    str_cpy(page1[2], "line_2:", 7);
+    str_cpy(page1[3], "line_3:", 7);
+    str_cpy(page1[4], "line_4:", 7);
+    str_cpy(page1[5], "line_5:", 7);
+    str_cpy(page1[6], "line_6:", 7);
+    str_cpy(page1[7], "line_7:", 7);
+    str_cpy(page1[8], "**4_P1:", 7);
+    str_cpy(page1[9], "**4_P2:", 7);
 #if TotalParaNumber>9
     str_cpy(page11[0], "Return || Page 2", 16);
-    str_cpy(page11[1], "ServoP:", 7);
-    str_cpy(page11[2], "ServoI:", 7);
-    str_cpy(page11[3], "ServoD:", 7);
-    str_cpy(page11[4], "DriveP:", 7);
-    str_cpy(page11[5], "DriveI:", 7);
-    str_cpy(page11[6], "BgyroP:", 7);
-    str_cpy(page11[7], "BgyroI:", 7);
-    str_cpy(page11[8], "MeZero:", 7);
-    str_cpy(page11[9], "MecDir:", 7);
+    str_cpy(page11[1], "line_1:", 7);
+    str_cpy(page11[2], "line_2:", 7);
+    str_cpy(page11[3], "line_3:", 7);
+    str_cpy(page11[4], "line_4:", 7);
+    str_cpy(page11[5], "line_5:", 7);
+    str_cpy(page11[6], "line_6:", 7);
+    str_cpy(page11[7], "line_7:", 7);
+    str_cpy(page11[8], "**4_P3:", 7);
+    str_cpy(page11[9], "**4_P4:", 7);
 #if TotalParaNumber>18
     str_cpy(page12[0], "Return || Page 3", 16);
-    str_cpy(page12[1], "DynMec:", 7);     //22
-    str_cpy(page12[2], "DynVel:", 7);       //22
-    str_cpy(page12[3], "CameKp:", 7);     //22
-    str_cpy(page12[4], "CameKd:", 7);     //21
-    str_cpy(page12[5], "TarSpd:", 7);      //22
-    str_cpy(page12[6], "Para23:", 7);
-    str_cpy(page12[7], "Para24:", 7);
-    str_cpy(page12[8], "Para25:", 7);
-    str_cpy(page12[9], "Para26:", 7);
+    str_cpy(page12[1], "line_1:", 7);     //22
+    str_cpy(page12[2], "line_2:", 7);       //22
+    str_cpy(page12[3], "line_3:", 7);     //22
+    str_cpy(page12[4], "line_4:", 7);     //21
+    str_cpy(page12[5], "line_5:", 7);      //22
+    str_cpy(page12[6], "line_6:", 7);
+    str_cpy(page12[7], "line_7:", 7);
+    str_cpy(page12[8], "**4_I1:", 7);
+    str_cpy(page12[9], "**4_I2:", 7);
 #if TotalParaNumber>27
     str_cpy(page13[0], "Return || Page 4", 16);
-    str_cpy(page13[1], "Para27:", 7);
-    str_cpy(page13[2], "Para28:", 7);
-    str_cpy(page13[3], "Para29:", 7);
-    str_cpy(page13[4], "Para30:", 7);
-    str_cpy(page13[5], "Para31:", 7);
-    str_cpy(page13[6], "Para32:", 7);
+    str_cpy(page13[1], "**4_I3:", 7);
+    str_cpy(page13[2], "**4_I4:", 7);
+    str_cpy(page13[3], "**4_D1:", 7);
+    str_cpy(page13[4], "**4_D2:", 7);
+    str_cpy(page13[5], "**4_D3:", 7);
+    str_cpy(page13[6], "**4_D4:", 7);
     str_cpy(page13[7], "Para33:", 7);
     str_cpy(page13[8], "Para34:", 7);
     str_cpy(page13[9], "Para35:", 7);
@@ -1325,8 +1330,86 @@ void GUI_Load_Data ()
 #endif
 
     //此处给外部变量赋值
+    PID_Matrix1_val(PID_Matrix1[0]);
+    PID_Matrix2_val(PID_Matrix2[0]);
+    PID_Matrix3_val(PID_Matrix3[0]);
+    PID_Matrix4_val(PID_Matrix4[0]);
+
+
+
+
 
 }
+
+
+uint8 GET_NUMBER(double pdata , int nwei)
+{
+    int temp_n = 1;
+    int temp_data = 0;
+    for (int i = nwei; i < 8; i++)
+    {
+        temp_n = temp_n * 10;
+    }
+    temp_data = (int)pdata / temp_n;
+    temp_data = temp_data % 10;
+    return (uint8)temp_data;
+}
+
+
+void PID_Matrix1_val(uint8 *PID_Matrix11)
+{
+    for (int i = 0; i <= 6; i++)
+    {
+        for (int j = 1; j <= 7; j++)
+        {
+            PID_Matrix11[i*7+j-1] = GET_NUMBER(paraData[i], j);
+        }
+    }
+}
+
+
+void PID_Matrix2_val(uint8 *PID_Matrix22)
+{
+    for (int i = 9; i <= 15; i++)
+    {
+        for (int j = 1; j <= 7; j++)
+        {
+            PID_Matrix22[(i-9)*7+j-1] = GET_NUMBER(paraData[i], j);
+        }
+    }
+}
+
+
+void PID_Matrix3_val(uint8 *PID_Matrix33)
+{
+    for (int i = 18; i <= 24; i++)
+    {
+        for (int j = 1; j <= 7; j++)
+        {
+            PID_Matrix33[(i-18)*7+j-1] = GET_NUMBER(paraData[i], j);
+        }
+    }
+}
+
+
+void PID_Matrix4_val(float *PID_Matrix44)
+{
+    PID_Matrix44[0] = paraData[7];
+    PID_Matrix44[1] = paraData[8];
+    PID_Matrix44[2] = paraData[16];
+    PID_Matrix44[3] = paraData[17];
+    PID_Matrix44[4] = paraData[25];
+    PID_Matrix44[5] = paraData[26];
+    PID_Matrix44[6] = paraData[27];
+    PID_Matrix44[7] = paraData[28];
+    PID_Matrix44[8] = paraData[29];
+    PID_Matrix44[9] = paraData[30];
+    PID_Matrix44[10] = paraData[31];
+    PID_Matrix44[11] = paraData[32];
+}
+
+
+
  void controlLeft()
  {
 
@@ -1340,20 +1423,18 @@ void GUI_Load_Data ()
  {
 
      speed_confor = speed_confor + 150;
-     if (speed_confor > 5000)
-         speed_confor = 5000;
-     pwm_duty(ATOM0_CH4_P02_4,speed_confor);
-     pwm_duty(ATOM0_CH5_P02_5,speed_confor);
-     pwm_duty(ATOM0_CH6_P02_6,0);
-     pwm_duty(ATOM0_CH7_P02_7,0);
+     pwm_duty(ATOM1_CH4_P02_4,speed_confor);
+     pwm_duty(ATOM1_CH5_P02_5,speed_confor);
+     pwm_duty(ATOM1_CH6_P02_6,0);
+     pwm_duty(ATOM1_CH7_P02_7,0);
  }
  void controlBackward()
  {
      speed_confor = 0;
-     pwm_duty(ATOM0_CH4_P02_4,0);
-     pwm_duty(ATOM0_CH5_P02_5,0);
-     pwm_duty(ATOM0_CH6_P02_6,0);
-     pwm_duty(ATOM0_CH7_P02_7,0);
+     pwm_duty(ATOM1_CH4_P02_4,0);
+     pwm_duty(ATOM1_CH5_P02_5,0);
+     pwm_duty(ATOM1_CH6_P02_6,0);
+     pwm_duty(ATOM1_CH7_P02_7,0);
 
  }
  void controlClear(){}

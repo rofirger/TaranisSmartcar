@@ -7,7 +7,7 @@ extern bool is_right_out;
 extern int16_t left_speed;
 extern int16_t right_speed;
 
-// Í¸ÊÓ±ä»»¾ØÕó¼°ÓëÍ¸ÊÓ±ä»»Ïà¹Ø
+// é€è§†å˜æ¢çŸ©é˜µåŠä¸é€è§†å˜æ¢ç›¸å…³
 float perspective_transform_mat[3][3] = {{1.2243, 7.0365, -21.1096}, {0, 9.238, -21.5936}, {0, 0.0748, 1}};
 typedef struct Pos
 {
@@ -16,51 +16,51 @@ typedef struct Pos
 } Pos;
 Pos mid_line_perspective_transform[MT9V03X_H];
 
-// ÉÏÎ»»ú
+// ä¸Šä½æœº
 //#define UPPER_COMPUTER
-// ÏÂÎ»»ú
+// ä¸‹ä½æœº
 #define LOWER_COMPUTER
 /*<!
- *  @brief      ÔöÁ¿Ê½PID
- *  *sptr £ºÎó²î²ÎÊı
- *  *pid:  PID²ÎÊı
- *  nowPoint£ºÊµ¼ÊÖµ
- *  targetPoint£º   ÆÚÍûÖµ
+ *  @brief      å¢é‡å¼PID
+ *  *sptr ï¼šè¯¯å·®å‚æ•°
+ *  *pid:  PIDå‚æ•°
+ *  nowPointï¼šå®é™…å€¼
+ *  targetPointï¼š   æœŸæœ›å€¼
  */
-// ÔöÁ¿Ê½PIDµç»ú¿ØÖÆ
+// å¢é‡å¼PIDç”µæœºæ§åˆ¶
 float PID_Increase (Error *sptr, PID *pid, float nowPoint, float targetPoint)
 {
-    float increase;                                                                          //×îºóµÃ³öµÄÊµ¼ÊÔöÁ¿
-    sptr->currentError = targetPoint - nowPoint;                                             // ¼ÆËãµ±Ç°Îó²î
-    increase = pid->P * (sptr->currentError - sptr->lastError)                               //±ÈÀıP
-    + pid->I * sptr->currentError                                                 //»ı·ÖI
-    + pid->D * (sptr->currentError - 2 * sptr->lastError + sptr->previoursError); //Î¢·ÖD
-    sptr->previoursError = sptr->lastError;                                                  // ¸üĞÂÇ°´ÎÎó²î
-    sptr->lastError = sptr->currentError;                                                    // ¸üĞÂÉÏ´ÎÎó²î
-    return increase;                                                                         // ·µ»ØÔöÁ¿
+    float increase;                                                                          //æœ€åå¾—å‡ºçš„å®é™…å¢é‡
+    sptr->currentError = targetPoint - nowPoint;                                             // è®¡ç®—å½“å‰è¯¯å·®
+    increase = pid->P * (sptr->currentError - sptr->lastError)                               //æ¯”ä¾‹P
+    + pid->I * sptr->currentError                                                 //ç§¯åˆ†I
+    + pid->D * (sptr->currentError - 2 * sptr->lastError + sptr->previoursError); //å¾®åˆ†D
+    sptr->previoursError = sptr->lastError;                                                  // æ›´æ–°å‰æ¬¡è¯¯å·®
+    sptr->lastError = sptr->currentError;                                                    // æ›´æ–°ä¸Šæ¬¡è¯¯å·®
+    return increase;                                                                         // è¿”å›å¢é‡
 }
 
 /*<!
- *  @brief      Î»ÖÃÊ½PID
- *  *sptr £ºÎó²î²ÎÊı
- *  *pid:  PID²ÎÊı
- *  now_point£ºÊµ¼ÊÖµ
- *  target_point£º   ÆÚÍûÖµ
+ *  @brief      ä½ç½®å¼PID
+ *  *sptr ï¼šè¯¯å·®å‚æ•°
+ *  *pid:  PIDå‚æ•°
+ *  now_pointï¼šå®é™…å€¼
+ *  target_pointï¼š   æœŸæœ›å€¼
  */
 float PID_Pos (PosErr *sptr, PID *pid, float now_point, float target_point)
 {
-    float pos_;                                                       // Î»ÖÃ
-    sptr->err.currentError = target_point - now_point;                // ¼ÆËãµ±Ç°Îó²î
-    sptr->loc_sum += sptr->err.currentError;                          // ÀÛ¼ÆÎó²î
-    pos_ = pid->P * sptr->err.currentError                            // ±ÈÁĞP
-    + pid->I * sptr->loc_sum                                   // »ı·ÖI
-    + pid->D * (sptr->err.currentError - sptr->err.lastError); // Î¢·ÖD
-    sptr->err.lastError = sptr->err.currentError;                     // ¸üĞÂÉÏ´ÎÎó²î
+    float pos_;                                                       // ä½ç½®
+    sptr->err.currentError = target_point - now_point;                // è®¡ç®—å½“å‰è¯¯å·®
+    sptr->loc_sum += sptr->err.currentError;                          // ç´¯è®¡è¯¯å·®
+    pos_ = pid->P * sptr->err.currentError                            // æ¯”åˆ—P
+    + pid->I * sptr->loc_sum                                   // ç§¯åˆ†I
+    + pid->D * (sptr->err.currentError - sptr->err.lastError); // å¾®åˆ†D
+    sptr->err.lastError = sptr->err.currentError;                     // æ›´æ–°ä¸Šæ¬¡è¯¯å·®
     return pos_;
 }
 
 /*
- * ¶şÖµ»¯º¯Êı
+ * äºŒå€¼åŒ–å‡½æ•°
  */
 void BinaryzationProcess (int rows, int cols, unsigned int threshold_value)
 {
@@ -73,7 +73,7 @@ void BinaryzationProcess (int rows, int cols, unsigned int threshold_value)
     }
 }
 
-// »ñÈ¡Í¼Æ¬µÄÖ±·½Í¼
+// è·å–å›¾ç‰‡çš„ç›´æ–¹å›¾
 void GetHistGram (uint8_t width, uint8_t height)
 {
     for (int i_ = 0; i_ < 256; ++i_)
@@ -89,12 +89,12 @@ void GetHistGram (uint8_t width, uint8_t height)
     }
 }
 
-// ´ó½ò·¨»ñÈ¡ãĞÖµ
+// å¤§æ´¥æ³•è·å–é˜ˆå€¼
 unsigned char OTSUThreshold ()
 {
     int X, Y, amount = 0;
     int pixel_back = 0, pixel_fore = 0, pixel_integral_back = 0, pixel_integral_fore = 0, pixel_integral = 0;
-    double OmegaBack, OmegaFore, MicroBack, MicroFore, SigmaB, Sigma; // Àà¼ä·½²î;
+    double OmegaBack, OmegaFore, MicroBack, MicroFore, SigmaB, Sigma; // ç±»é—´æ–¹å·®;
     int pixel_min_value, pixel_max_value;
     int threshold = 0;
 
@@ -103,12 +103,12 @@ unsigned char OTSUThreshold ()
     for (pixel_max_value = 255; pixel_max_value > pixel_min_value && hist_gram[pixel_max_value] == 0; pixel_max_value--)
         ;
     if (pixel_max_value == pixel_min_value)
-        return pixel_max_value; // Í¼ÏñÖĞÖ»ÓĞÒ»¸öÑÕÉ«
+        return pixel_max_value; // å›¾åƒä¸­åªæœ‰ä¸€ä¸ªé¢œè‰²
     if (pixel_min_value + 1 == pixel_max_value)
-        return pixel_min_value; // Í¼ÏñÖĞÖ»ÓĞ¶ş¸öÑÕÉ«
+        return pixel_min_value; // å›¾åƒä¸­åªæœ‰äºŒä¸ªé¢œè‰²
 
     for (Y = pixel_min_value; Y <= pixel_max_value; Y++)
-        amount += hist_gram[Y]; //  ÏñËØ×ÜÊı
+        amount += hist_gram[Y]; //  åƒç´ æ€»æ•°
 
     pixel_integral = 0;
     for (Y = pixel_min_value; Y <= pixel_max_value; Y++)
@@ -155,7 +155,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
     {
         if (src_pixel_mat[src_rows - 1][mid_point] < threshold_val)
         {
-            // ÖØĞÂÑ°ÕÒÉ¨ÏßÖĞµã
+            // é‡æ–°å¯»æ‰¾æ‰«çº¿ä¸­ç‚¹
             for (int16_t j = mid_point - 40; j < mid_point + 40; j++)
             {
                 if (src_pixel_mat[src_rows - 1][j] > threshold_val)
@@ -171,7 +171,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
 #ifdef LOWER_COMPUTER
         uint8_t cur_point = mid_point;
 #endif // LOWER_COMPUTER
-        // É¨Ãè×óÏß
+        // æ‰«æå·¦çº¿
         while (cur_point - 2 > 0)
         {
             left_line[i] = 0;
@@ -183,7 +183,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
             }
             --cur_point;
         }
-        // É¨ÃèÓÒÏß
+        // æ‰«æå³çº¿
         cur_point = mid_point;
         while (cur_point + 2 < src_cols)
         {
@@ -213,7 +213,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
             uint8_t begine_fine_point = 42;
             uint8_t end_find_point = src_cols - begine_fine_point;
 #endif // LOWER_COMPUTER
-            // ¿ªÆô×İÏòÑ°Ïß
+            // å¼€å¯çºµå‘å¯»çº¿
             for (int j = begine_fine_point; j < end_find_point; ++j)
             {
                 for (int k = left_right_miss_point; k > 0; --k)
@@ -245,7 +245,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
                     }
                     --cur_point;
                 }
-                // É¨ÃèÓÒÏß
+                // æ‰«æå³çº¿
                 cur_point = now_min_col;
                 while (cur_point + 2 < src_cols)
                 {
@@ -281,7 +281,7 @@ void AuxiliaryProcess (uint8_t src_rows, uint8_t src_cols, unsigned char thresho
     }
 }
 
-/* ·¶Î§¼ì²â */
+/* èŒƒå›´æ£€æµ‹ */
 #ifdef UPPER_COMPUTER
 #define CHECK_RANGE(_data_for_check, _min, _max, _msg_out) \
         if (_data_for_check < _min || _data_for_check > _max)  \
@@ -305,7 +305,7 @@ float Sqrt (float number)
     y = y * (f - (x * y * y));
     return number * y;
 }
-// ¦²Xi^n
+// Î£Xi^n
 #ifdef UPPER_COMPUTER
 int32_t SumNPowX(size_t *arr, uint8_t start_index, uint8_t end_index, uint8_t pow_n)
 #endif // UPPER_COMPUTER
@@ -320,7 +320,7 @@ int32_t SumNPowX (uint8_t *arr, uint8_t start_index, uint8_t end_index, uint8_t 
     }
     return ret;
 }
-// ¦²Yi^n
+// Î£Yi^n
 #ifdef UPPER_COMPUTER
 int32_t SumNPowY(size_t *arr, uint8_t start_index, uint8_t end_index, uint8_t pow_n)
 #endif // UPPER_COMPUTER
@@ -335,7 +335,7 @@ int32_t SumNPowY (uint8_t *arr, uint8_t start_index, uint8_t end_index, uint8_t 
     }
     return ret;
 }
-// ¦²Xi^n*Yi
+// Î£Xi^n*Yi
 #ifdef UPPER_COMPUTER
 int32_t SumXNPowY(size_t *arr, uint8_t start_index, uint8_t end_index, uint8_t pow_n)
 #endif // UPPER_COMPUTER
@@ -350,7 +350,7 @@ int32_t SumXNPowY (uint8_t *arr, uint8_t start_index, uint8_t end_index, uint8_t
     }
     return ret;
 }
-// ¦²Yi^n*Xi
+// Î£Yi^n*Xi
 #ifdef UPPER_COMPUTER
 int32_t SumYNPowX(size_t *arr, uint8_t start_index, uint8_t end_index, uint8_t pow_n)
 #endif // UPPER_COMPUTER
@@ -365,7 +365,7 @@ int32_t SumYNPowX (uint8_t *arr, uint8_t start_index, uint8_t end_index, uint8_t
     }
     return ret;
 }
-// ¶ş´ÎÇúÏßÄâºÏ, x Óë y »¥»»
+// äºŒæ¬¡æ›²çº¿æ‹Ÿåˆ, x ä¸ y äº’æ¢
 #ifdef UPPER_COMPUTER
 QuadraticCoeffic QuadraticCurveFit(size_t *mid_line_arr, uint16_t start_index, uint16_t end_index)
 #endif // UPPER_COMPUTER
@@ -392,7 +392,7 @@ QuadraticCoeffic QuadraticCurveFit (uint8_t *mid_line_arr, uint16_t start_index,
     return ret;
 }
 
-// ¼ÆËãÇúÂÊ, x Óë y ²»»¥»»
+// è®¡ç®—æ›²ç‡, x ä¸ y ä¸äº’æ¢
 #ifdef UPPER_COMPUTER
 float CurvatureCal(size_t *mid_line_arr, int16_t start_index, int16_t end_index)
 #endif // UPPER_COMPUTER
@@ -411,7 +411,7 @@ float CurvatureCal (uint8_t *mid_line_arr, int16_t start_index, int16_t end_inde
             / (l1 * l2 * l3);
 }
 
-// Ò»´ÎÖ±ÏßÄâºÏ x Óë y »¥»»
+// ä¸€æ¬¡ç›´çº¿æ‹Ÿåˆ x ä¸ y äº’æ¢
 #ifdef UPPER_COMPUTER
 StraightLineCoeffic LinearRegress(size_t *mid_line_arr, uint16_t start_index, uint16_t end_index)
 #endif // UPPER_COMPUTER
@@ -439,7 +439,7 @@ StraightLineCoeffic LinearRegress (uint8_t *mid_line_arr, uint16_t start_index, 
     ret.a = a0;
     return ret;
 }
-// ĞŞÕı×óÓÒÏßÔëµã
+// ä¿®æ­£å·¦å³çº¿å™ªç‚¹
 #ifdef UPPER_COMPUTER
 void CorrectLRLine(size_t *left_line, size_t *right_line, size_t src_rows, size_t src_cols)
 #endif // UPPER_COMPUTER
@@ -462,7 +462,7 @@ void CorrectLRLine (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, u
     }
 }
 
-// ÔÚÓöµ½Ò»±ßÈüµÀ´ó·ù¶È°¼ÏİÊ±£¬¿ÉÒÔÍ¨¹ı¼ì²âÁíÒ»±ßÊÇ·ñÒ²´æÔÚ´ó·ù¶È°¼Ïİ£¬Èç¹û´æÔÚÔò¿ÉÈÏÎªÓöµ½Ê®×ÖÂ·¿Ú; ·ñÔò£¬Ê¹ÓÃ»ô·ò±ä»»¼ì²â²»°¼ÏİÒ»²àÊÇ·ñÎªÖ±Ïß£¬ÈôÎªÖ±ÏßÔò¿ÉÈÏÎªÓöµ½»·µÀ¡£
+// åœ¨é‡åˆ°ä¸€è¾¹èµ›é“å¤§å¹…åº¦å‡¹é™·æ—¶ï¼Œå¯ä»¥é€šè¿‡æ£€æµ‹å¦ä¸€è¾¹æ˜¯å¦ä¹Ÿå­˜åœ¨å¤§å¹…åº¦å‡¹é™·ï¼Œå¦‚æœå­˜åœ¨åˆ™å¯è®¤ä¸ºé‡åˆ°åå­—è·¯å£; å¦åˆ™ï¼Œä½¿ç”¨éœå¤«å˜æ¢æ£€æµ‹ä¸å‡¹é™·ä¸€ä¾§æ˜¯å¦ä¸ºç›´çº¿ï¼Œè‹¥ä¸ºç›´çº¿åˆ™å¯è®¤ä¸ºé‡åˆ°ç¯é“ã€‚
 
 RoadType road_type = NO_FIX_ROAD;
 #define NO_DEFINE_VALUE_FIX_POINT MT9V03X_H
@@ -511,7 +511,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
         return;
     }
-    // Ñ°ÕÒÖÕµãÏß
+    // å¯»æ‰¾ç»ˆç‚¹çº¿
     if (road_type != PREPARE_TO_OUT_CARBARN || road_type != OUT_CARBARN)
     {
         uint8_t half_of_rows = (src_rows >> 1) - 6;
@@ -560,7 +560,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
     fix_right_tail.fix_point_type = NO_TYPE;
     fix_right_tail.pos_col = NO_DEFINE_VALUE;
 
-    // ¶ÔÓÚÌØÊâÂ·¶Î£¬ÖØĞÂÒÔĞÂµÄ·½°¸ÕÒ±ß½çÏß
+    // å¯¹äºç‰¹æ®Šè·¯æ®µï¼Œé‡æ–°ä»¥æ–°çš„æ–¹æ¡ˆæ‰¾è¾¹ç•Œçº¿
     if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN
             || road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
     {
@@ -568,7 +568,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         for (int16_t i = src_rows - 2; i >= 0; --i)
         {
             size_t cur_point = mid_point;
-            // É¨Ãè×óÏß
+            // æ‰«æå·¦çº¿
             while (cur_point - 2 > 0)
             {
                 left_line[i] = 0;
@@ -580,7 +580,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
                 --cur_point;
             }
-            // É¨ÃèÓÒÏß
+            // æ‰«æå³çº¿
             cur_point = mid_point;
             while (cur_point + 2 < src_cols)
             {
@@ -608,7 +608,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
     }
 
-    // ×óÓÒÏßÏàÁÚµãµã²î, ´Ó¿¿½ü³µÍ··½Ïò¿ªÊ¼£¡£¡
+    // å·¦å³çº¿ç›¸é‚»ç‚¹ç‚¹å·®, ä»é è¿‘è½¦å¤´æ–¹å‘å¼€å§‹ï¼ï¼
     int16_t left_consecutive_point_offset[69];
     int16_t right_consecutive_point_offset[69];
     for (int16_t j = src_rows - 2; j >= 0; --j)
@@ -634,7 +634,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
     }
 
-    // ÖØĞÂÕÒend_src_rows
+    // é‡æ–°æ‰¾end_src_rows
     for (int16_t i = src_rows - 1; i >= 0; --i)
     {
         if (left_line[i] == right_line[i])
@@ -643,24 +643,24 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             break;
         }
     }
-    // Ò»Ğ©³£Êı
+    // ä¸€äº›å¸¸æ•°
     const static int16_t LEFT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL = 11;
     const static int16_t LEFT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL = -11;
 
     const static int16_t RIGHT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL = -11;
     const static int16_t RIGHT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL = 11;
-    // ×ó¡¢ÓÒÏßÉúĞ§µã£¨Ğ¡ÓÚ»òµÈÓÚµÄµãÊÓÎªÓĞĞ§µã£©
+    // å·¦ã€å³çº¿ç”Ÿæ•ˆç‚¹ï¼ˆå°äºæˆ–ç­‰äºçš„ç‚¹è§†ä¸ºæœ‰æ•ˆç‚¹ï¼‰
     int8_t left_valid_point = src_rows - 5;
     int8_t right_valid_point = src_rows - 5;
     if (road_type != IN_LEFT_ROTARY || road_type != IN_RIGHT_ROTARY)
     {
         for (int i = src_rows - 5; i >= 0 && right_line[i] - (int16_t) left_line[i] >= 10; --i)
         {
-            // ×óÏß
+            // å·¦çº¿
             if (fix_left_head.pos_col == NO_DEFINE_VALUE)
             {
-                // ´ËÇé¿öÏÂ´¦ÔÚÄ³¸öÔªËØÖ®ÖĞ£¬²»×ö¾ßÌåÔªËØÅĞ±ğ
-                if (left_line[i + 1] == 0 && left_line[i + 2] == 0 && left_line[i + 3] == 0 && i > src_rows - 10) // ×óÏß²»¿É¼ûÊ±[ÔİÊ±]ÊÓÎªÓöµ½ÔÚÄ³¸öÌØÊâÔªËØÖĞ
+                // æ­¤æƒ…å†µä¸‹å¤„åœ¨æŸä¸ªå…ƒç´ ä¹‹ä¸­ï¼Œä¸åšå…·ä½“å…ƒç´ åˆ¤åˆ«
+                if (left_line[i + 1] == 0 && left_line[i + 2] == 0 && left_line[i + 3] == 0 && i > src_rows - 10) // å·¦çº¿ä¸å¯è§æ—¶[æš‚æ—¶]è§†ä¸ºé‡åˆ°åœ¨æŸä¸ªç‰¹æ®Šå…ƒç´ ä¸­
                 {
                     uint8_t num_little_offset = 0;
                     bool is_continue_little_offset = true;
@@ -685,7 +685,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         fix_left_head.fix_point_type = NO_DEFINE_VALUE_FIX_POINT;
                         if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
                         {
-                            // ÍùºóÕÒ×î´óµã
+                            // å¾€åæ‰¾æœ€å¤§ç‚¹
                             int _max = 0;
                             int _max_col = i;
                             for (int16_t j = i; j >= end_src_rows; --j)
@@ -703,7 +703,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                         else
                         {
-                            // Èç¹û²»´¦ÓÚ»·µÀµÚÒ»×´Ì¬£¬ÕÒĞüÑÂµã
+                            // å¦‚æœä¸å¤„äºç¯é“ç¬¬ä¸€çŠ¶æ€ï¼Œæ‰¾æ‚¬å´–ç‚¹
                             bool is_meet_left_cliff_threshold_offset = false;
                             int16_t _j_find_cliff = i;
                             for (_j_find_cliff; _j_find_cliff >= end_src_rows; --_j_find_cliff)
@@ -716,7 +716,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                             if (is_meet_left_cliff_threshold_offset)
                             {
-                                // ½ÓÏÂÀ´ÕÒ·ûºÏ×÷ÎªĞüÑÂµãµÄµã
+                                // æ¥ä¸‹æ¥æ‰¾ç¬¦åˆä½œä¸ºæ‚¬å´–ç‚¹çš„ç‚¹
                                 for (_j_find_cliff; _j_find_cliff >= end_src_rows; --_j_find_cliff)
                                 {
                                     if (ABS(left_consecutive_point_offset[_j_find_cliff]) < 2)
@@ -730,14 +730,14 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                     }
                 }
-                else if (left_consecutive_point_offset[i] > LEFT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL) // Âä²îÁÙ½çµã£¬ÉîÈëÉ¨ÃèÈ·ÈÏÊÇ·ñÎªĞüÑÂ»òÕßÔ²»¡
+                else if (left_consecutive_point_offset[i] > LEFT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL) // è½å·®ä¸´ç•Œç‚¹ï¼Œæ·±å…¥æ‰«æç¡®è®¤æ˜¯å¦ä¸ºæ‚¬å´–æˆ–è€…åœ†å¼§
                 {
 
-                    // »ØËİÑ°ÕÒÂä²îĞ¡ÓÚ3µÄÁ½¸öÒÔÉÏµÄµã
-                    int16_t left_head_time = NO_DEFINE_VALUE;                   // ÔİÊ±²¹ÏßÍ·µã
-                    int16_t left_tail_time = NO_DEFINE_VALUE;                   // ÔİÊ±²¹ÏßÎ²µã
+                    // å›æº¯å¯»æ‰¾è½å·®å°äº3çš„ä¸¤ä¸ªä»¥ä¸Šçš„ç‚¹
+                    int16_t left_head_time = NO_DEFINE_VALUE;                   // æš‚æ—¶è¡¥çº¿å¤´ç‚¹
+                    int16_t left_tail_time = NO_DEFINE_VALUE;                   // æš‚æ—¶è¡¥çº¿å°¾ç‚¹
 
-                    // ÏÈÅĞ¶ÏÊÇ·ñÊÇÔ²»¡
+                    // å…ˆåˆ¤æ–­æ˜¯å¦æ˜¯åœ†å¼§
                     uint8_t _num_positive_offset = 0;
                     int _j_find_arc_max = i;
                     for (_j_find_arc_max; _j_find_arc_max < src_rows - 3; ++_j_find_arc_max)
@@ -752,19 +752,19 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         fix_left_head.fix_point_type = ARC_LEFT;
                         fix_left_head.pos_col = _j_find_arc_max;
                     }
-                    //              ÒÔÏÂÊÇ ²»ÊÇÔ²»¡
+                    //              ä»¥ä¸‹æ˜¯ ä¸æ˜¯åœ†å¼§
                     else
                     {
-                        for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // ±ØĞëÄÜÔÚÍù»ØµÄÎå¸öµãÄÚÕÒµ½£¬·ñÔòÊÓÎª²»´æÔÚ.ºóÒ»¸öÌõ¼şÊÇÎªÁË±ÜÃâÒç³ö
+                        for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // å¿…é¡»èƒ½åœ¨å¾€å›çš„äº”ä¸ªç‚¹å†…æ‰¾åˆ°ï¼Œå¦åˆ™è§†ä¸ºä¸å­˜åœ¨.åä¸€ä¸ªæ¡ä»¶æ˜¯ä¸ºäº†é¿å…æº¢å‡º
                         {
                             if (ABS(left_consecutive_point_offset[k_]) < 3
                                 && ABS(left_consecutive_point_offset[k_ + 1]) < 3)
                             {
                                 left_head_time = k_ + 1;
-                                break; // ÕÒµ½²¢·µ»Ø
+                                break; // æ‰¾åˆ°å¹¶è¿”å›
                             }
                         }
-                        if (left_head_time != NO_DEFINE_VALUE) // ³É¹¦ÕÒµ½ÔİÊ±µÄ²¹ÏßÍ·µã
+                        if (left_head_time != NO_DEFINE_VALUE) // æˆåŠŸæ‰¾åˆ°æš‚æ—¶çš„è¡¥çº¿å¤´ç‚¹
                         {
                             uint8_t train_ele_num = 5;
                             int16_t k_ = i - 1;
@@ -787,11 +787,11 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                     break;
                                 }
                             }
-                            // ÏòÇ°Ñ°ÕÒ
-                            if (fix_left_head.pos_col != NO_DEFINE_VALUE) // ²¹ÏßÍ·µã±»³É¹¦ÕÒµ½£¬½ÓÏÂÀ´Ñ°ÕÒ²¹ÏßÎ²µã
+                            // å‘å‰å¯»æ‰¾
+                            if (fix_left_head.pos_col != NO_DEFINE_VALUE) // è¡¥çº¿å¤´ç‚¹è¢«æˆåŠŸæ‰¾åˆ°ï¼Œæ¥ä¸‹æ¥å¯»æ‰¾è¡¥çº¿å°¾ç‚¹
                             {
 
-                                // ÏÈÅĞ¶ÏÊÇ·ñÊÇĞüÑÂµã
+                                // å…ˆåˆ¤æ–­æ˜¯å¦æ˜¯æ‚¬å´–ç‚¹
                                 bool _is_meet_threshold_offset = false;
                                 for (k_ = k_ - 1; k_ > 2; --k_)
                                 {
@@ -803,7 +803,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                 }
                                 if (_is_meet_threshold_offset && k_ - 5 > 0)
                                 {
-                                    // Íùºó¼¸¸öµãÕÒ×îºóµÄ´óÂä²î
+                                    // å¾€åå‡ ä¸ªç‚¹æ‰¾æœ€åçš„å¤§è½å·®
                                     int16_t _point_threshold = k_;
                                     for (int16_t j = k_; j > k_ - 5; --j)
                                     {
@@ -814,7 +814,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                     }
                                     if (_point_threshold > 6)
                                     {
-                                        // Èç¹ûÊÇĞüÑÂ£¬Íùºó¼¸¸ö¼¸¸öµãµÄÆ½¾ùÂä²î±ØĞëĞ¡ÓÚ2,¶øÇÒÂä²î¾ùÎª0»òÕß¸ºÊı
+                                        // å¦‚æœæ˜¯æ‚¬å´–ï¼Œå¾€åå‡ ä¸ªå‡ ä¸ªç‚¹çš„å¹³å‡è½å·®å¿…é¡»å°äº2,è€Œä¸”è½å·®å‡ä¸º0æˆ–è€…è´Ÿæ•°
                                         float _total_offset = 0;
                                         bool _is_continue_polarity = true;
                                         for (int16_t j = _point_threshold - 1; j > _point_threshold - 6; --j)
@@ -826,18 +826,18 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                             }
                                             _total_offset += left_consecutive_point_offset[j];
                                         }
-                                        // ÅĞ¶ÏÎªĞüÑÂ
+                                        // åˆ¤æ–­ä¸ºæ‚¬å´–
                                         float _average_offset = _total_offset / 5;
                                         if (_is_continue_polarity && _average_offset > -1.5 && _average_offset <= 0)
                                         {
                                             fix_left_tail.fix_point_type = CLIFF;
                                             fix_left_tail.pos_col = _point_threshold - 2;
                                         }
-                                        // ÅĞ¶ÏÎªÔ²»¡
+                                        // åˆ¤æ–­ä¸ºåœ†å¼§
                                         else if (_average_offset < -2)
                                         {
                                             fix_left_tail.fix_point_type = ARC_LEFT;
-                                            // ÕÒ×î´óµÄ
+                                            // æ‰¾æœ€å¤§çš„
                                             int _max_cols = left_line[_point_threshold];
                                             for (int16_t j = _point_threshold; j > 0; --j)
                                             {
@@ -857,11 +857,11 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     }
 
                 }
-                // ¶ÔÓÚ×óÏß£¬ÈçºÎ³öÏÖÕı³£µÄ¸ºÂä²î·Ç³£´óµÄµã£¬Ôò¿ÉÊÓÎªĞèÒª²¹Ïß
+                // å¯¹äºå·¦çº¿ï¼Œå¦‚ä½•å‡ºç°æ­£å¸¸çš„è´Ÿè½å·®éå¸¸å¤§çš„ç‚¹ï¼Œåˆ™å¯è§†ä¸ºéœ€è¦è¡¥çº¿
                 if (fix_left_tail.pos_col == NO_DEFINE_VALUE && left_consecutive_point_offset[i] < -30
                     && left_line[i] - (int16_t)left_line[i + 2] > 30)
                 {
-                    // ÍùºóÑéÖ¤¿´¿´ÊÇ·ñÕâ¸öÂä²î´óµÄµØ·½ÊÇÕı³£µÄ
+                    // å¾€åéªŒè¯çœ‹çœ‹æ˜¯å¦è¿™ä¸ªè½å·®å¤§çš„åœ°æ–¹æ˜¯æ­£å¸¸çš„
                     bool is_normal = true;
                     bool is_arc = false;
                     uint8_t max_left_point_tail_col = left_line[i];
@@ -877,7 +877,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         else if (left_consecutive_point_offset[j] > 4)
                         {
                             is_normal = false;
-                            // ÑéÖ¤ÊÇ·ñÓöµ½Ô²»·
+                            // éªŒè¯æ˜¯å¦é‡åˆ°åœ†ç¯
                             for (int16_t k_ = j; k_ >= 5; k_--)
                             {
                                 int16_t three_left_avea = (left_line[k_] + left_line[k_ - 1] + left_line[k_ - 2]) / 3;
@@ -894,7 +894,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             max_left_point_tail_row = j;
                         }
                     }
-                    // ÖØĞÂÑéÖ¤ÊÇ·ñÕæµÄÓöµ½Ô²»·
+                    // é‡æ–°éªŒè¯æ˜¯å¦çœŸçš„é‡åˆ°åœ†ç¯
                     if (is_arc == false)
                     {
                         for (int16_t k_ = i - 6; k_ >= 5; k_--)
@@ -907,7 +907,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                         }
                     }
-                    // ÍùÉãÏñÍ··½ÏòÕÒ²¹ÏßÍ·
+                    // å¾€æ‘„åƒå¤´æ–¹å‘æ‰¾è¡¥çº¿å¤´
                     if (is_normal)
                     {
                         uint8_t max_left_point_head_col = 0;
@@ -920,7 +920,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                 max_left_point_head_row = j;
                             }
                         }
-                        // ÑéÖ¤×î´óµÄµãÊÇ²»ÊÇÕı³£µã
+                        // éªŒè¯æœ€å¤§çš„ç‚¹æ˜¯ä¸æ˜¯æ­£å¸¸ç‚¹
                         bool is_normal_max_point = true;
                         for (int16_t j = max_left_point_head_row; j < max_left_point_head_row + 4; ++j)
                         {
@@ -943,7 +943,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     }
                 }
             }
-            // ¶ÔÓÚroad_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKENĞèÒªÌØÊâÕÒ²¹Ïßµã
+            // å¯¹äºroad_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKENéœ€è¦ç‰¹æ®Šæ‰¾è¡¥çº¿ç‚¹
             if (fix_left_tail.pos_col == NO_DEFINE_VALUE)
             {
                 if (((road_type == LEFT_ROTARY_IN_FIRST_SUNKEN
@@ -955,7 +955,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -30)))
                 {
                     int16_t temp_fix_left_tail_pos_col_rows = -1;
-                    // ÍùºóËÑÖ±µ½ËÑµ½Á½µã¼ä¾àÎª1
+                    // å¾€åæœç›´åˆ°æœåˆ°ä¸¤ç‚¹é—´è·ä¸º1
                     for (int16_t j = i; j >= 0; --j)
                     {
                         if (left_consecutive_point_offset[j] >= -2)
@@ -966,7 +966,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     }
                     if (temp_fix_left_tail_pos_col_rows != -1 && i - temp_fix_left_tail_pos_col_rows <= 3)
                     {
-                        // Íù³µÇ°ËÑ¿´¿´ÊÇ·ñËÑµ½
+                        // å¾€è½¦å‰æœçœ‹çœ‹æ˜¯å¦æœåˆ°
                         uint8_t num_left_zero = 0;
                         for (int16_t j = i + 1; j <= i + 7; ++j)
                         {
@@ -987,13 +987,13 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
             }
 
-            // ÓÒÏß
+            // å³çº¿
             if (fix_right_head.pos_col == NO_DEFINE_VALUE)
             {
                 if (right_line[i + 1] == src_cols - 1 && right_line[i + 2] == src_cols - 1
-                    && right_line[i + 3] == src_cols - 1 && i > src_rows - 10) // ÓÒÏß²»¿É¼ûÊ±[ÔİÊ±]ÊÓÎªÓöµ½ÔÚÄ³¸öÌØÊâÔªËØÖĞ
+                    && right_line[i + 3] == src_cols - 1 && i > src_rows - 10) // å³çº¿ä¸å¯è§æ—¶[æš‚æ—¶]è§†ä¸ºé‡åˆ°åœ¨æŸä¸ªç‰¹æ®Šå…ƒç´ ä¸­
                 {
-                    // ÅĞ¶ÏÊÇ·ñº¬¶Ïµã
+                    // åˆ¤æ–­æ˜¯å¦å«æ–­ç‚¹
                     uint8_t num_little_offset = 0;
                     bool is_continue_little_offset = true;
                     for (int16_t j = i; j >= 5; --j)
@@ -1016,7 +1016,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         fix_right_head.fix_point_type = NO_DEFINE_VALUE_FIX_POINT;
                         if (road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
                         {
-                            // ÍùºóÕÒ×îĞ¡µã
+                            // å¾€åæ‰¾æœ€å°ç‚¹
                             int _min = src_cols - 1;
                             int _min_col = i;
                             for (int16_t j = i; j >= end_src_rows; --j)
@@ -1034,7 +1034,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                         else
                         {
-                            // Èç¹û²»´¦ÓÚ»·µÀµÚÒ»×´Ì¬, ÕÒĞüÑÂµã
+                            // å¦‚æœä¸å¤„äºç¯é“ç¬¬ä¸€çŠ¶æ€, æ‰¾æ‚¬å´–ç‚¹
                             bool is_meet_right_cliff_threshold_offset = false;
                             int16_t _j_find_cliff = i;
                             for (_j_find_cliff = i; _j_find_cliff >= end_src_rows; --_j_find_cliff)
@@ -1047,7 +1047,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                             if (is_meet_right_cliff_threshold_offset)
                             {
-                                // ½ÓÏÂÀ´ÕÒ·ûºÏ×÷ÎªĞüÑÂµãµÄµã
+                                // æ¥ä¸‹æ¥æ‰¾ç¬¦åˆä½œä¸ºæ‚¬å´–ç‚¹çš„ç‚¹
                                 for (_j_find_cliff; _j_find_cliff >= end_src_rows; --_j_find_cliff)
                                 {
                                     if (ABS(right_consecutive_point_offset[_j_find_cliff]) < 2)
@@ -1062,13 +1062,13 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
                     }
                 }
-                else if (right_consecutive_point_offset[i] < RIGHT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL) // Âä²îÁÙ½çµã£¬ÉîÈëÉ¨ÃèÈ·ÈÏÊÇ·ñÎªĞüÑÂ
+                else if (right_consecutive_point_offset[i] < RIGHT_LINE_HEAD_OFFSET_THRESHOLD_NORMAL) // è½å·®ä¸´ç•Œç‚¹ï¼Œæ·±å…¥æ‰«æç¡®è®¤æ˜¯å¦ä¸ºæ‚¬å´–
                 {
-                    // »ØËİÑ°ÕÒÂä²îĞ¡ÓÚ3µÄÁ½¸öÒÔÉÏµÄµã
-                    int16_t right_head_time = NO_DEFINE_VALUE;                  // ÔİÊ±²¹ÏßÍ·µã
-                    int16_t right_tail_time = NO_DEFINE_VALUE;                  // ÔİÊ±²¹ÏßÎ²µã
+                    // å›æº¯å¯»æ‰¾è½å·®å°äº3çš„ä¸¤ä¸ªä»¥ä¸Šçš„ç‚¹
+                    int16_t right_head_time = NO_DEFINE_VALUE;                  // æš‚æ—¶è¡¥çº¿å¤´ç‚¹
+                    int16_t right_tail_time = NO_DEFINE_VALUE;                  // æš‚æ—¶è¡¥çº¿å°¾ç‚¹
 
-                    // ÏÈÅĞ¶ÏÊÇ·ñÊÇÔ²»¡
+                    // å…ˆåˆ¤æ–­æ˜¯å¦æ˜¯åœ†å¼§
                     uint8_t _num_positive_offset = 0;
                     int _j_find_arc_min = i;
                     for (_j_find_arc_min; _j_find_arc_min < src_rows - 3; ++_j_find_arc_min)
@@ -1084,7 +1084,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         fix_right_head.pos_col = _j_find_arc_min;
                         if (road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
                         {
-                            // ÕÒĞüÑÂµã
+                            // æ‰¾æ‚¬å´–ç‚¹
                             int16_t _j_find_cliff = i;
                             bool _is_find_right_cliff = false;
                             for (_j_find_cliff; _j_find_cliff > 5; --_j_find_cliff)
@@ -1097,7 +1097,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                             if (_is_find_right_cliff)
                             {
-                                // ÕÒ×îºóµÄ´óÂä²î
+                                // æ‰¾æœ€åçš„å¤§è½å·®
                                 int16_t _point_threshold = _j_find_cliff;
                                 for (int16_t j = _j_find_cliff; j > _j_find_cliff - 5; --j)
                                 {
@@ -1106,7 +1106,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                         _point_threshold = j;
                                     }
                                 }
-                                // ÑéÖ¤ÊÇ·ñÊÇĞüÑÂµã
+                                // éªŒè¯æ˜¯å¦æ˜¯æ‚¬å´–ç‚¹
                                 if (_point_threshold > 6)
                                 {
                                     float _total_offset = 0;
@@ -1120,7 +1120,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                         }
                                         _total_offset += right_consecutive_point_offset[j];
                                     }
-                                    // ÅĞ¶ÏÎªĞüÑÂ
+                                    // åˆ¤æ–­ä¸ºæ‚¬å´–
                                     float _average_offset = _total_offset / 5;
                                     if (_is_continue_polarity && _average_offset < 1.8 && _average_offset <= 0)
                                     {
@@ -1132,19 +1132,19 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                         }
                     }
-                    //          ÒÔÏÂÊÇ   ²»ÊÇÔ²»¡
+                    //          ä»¥ä¸‹æ˜¯   ä¸æ˜¯åœ†å¼§
                     else
                     {
-                        for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // ±ØĞëÄÜÔÚÍù»ØµÄÎå¸öµãÄÚÕÒµ½£¬·ñÔòÊÓÎª²»´æÔÚ.ºóÒ»¸öÌõ¼şÊÇÎªÁË±ÜÃâÒç³ö
+                        for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // å¿…é¡»èƒ½åœ¨å¾€å›çš„äº”ä¸ªç‚¹å†…æ‰¾åˆ°ï¼Œå¦åˆ™è§†ä¸ºä¸å­˜åœ¨.åä¸€ä¸ªæ¡ä»¶æ˜¯ä¸ºäº†é¿å…æº¢å‡º
                         {
                             if (ABS(right_consecutive_point_offset[k_]) < 3
                                 && ABS(right_consecutive_point_offset[k_ + 1]) < 3)
                             {
                                 right_head_time = k_ + 1;
-                                break; // ÕÒµ½²¢·µ»Ø
+                                break; // æ‰¾åˆ°å¹¶è¿”å›
                             }
                         }
-                        if (right_head_time != NO_DEFINE_VALUE) // ³É¹¦ÕÒµ½ÔİÊ±µÄ²¹ÏßÍ·µã
+                        if (right_head_time != NO_DEFINE_VALUE) // æˆåŠŸæ‰¾åˆ°æš‚æ—¶çš„è¡¥çº¿å¤´ç‚¹
                         {
                             uint8_t train_ele_num = 5;
                             int16_t k_ = i - 1;
@@ -1166,10 +1166,10 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                     break;
                                 }
                             }
-                            // ÏòÇ°Ñ°ÕÒ
-                            if (fix_right_head.pos_col != NO_DEFINE_VALUE) // ²¹ÏßÍ·µã±»³É¹¦ÕÒµ½£¬½ÓÏÂÀ´Ñ°ÕÒ²¹ÏßÎ²µã
+                            // å‘å‰å¯»æ‰¾
+                            if (fix_right_head.pos_col != NO_DEFINE_VALUE) // è¡¥çº¿å¤´ç‚¹è¢«æˆåŠŸæ‰¾åˆ°ï¼Œæ¥ä¸‹æ¥å¯»æ‰¾è¡¥çº¿å°¾ç‚¹
                             {
-                                // ÏÈÅĞ¶ÏÊÇ·ñÊÇĞüÑÂµã
+                                // å…ˆåˆ¤æ–­æ˜¯å¦æ˜¯æ‚¬å´–ç‚¹
                                 bool _is_meet_threshold_offset = false;
                                 for (k_ = k_ - 1; k_ > 2; --k_)
                                 {
@@ -1181,7 +1181,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                 }
                                 if (_is_meet_threshold_offset && k_ - 5 > 0)
                                 {
-                                    // Íùºó¼¸¸öµãÕÒ×îºóµÄ´óÂä²î
+                                    // å¾€åå‡ ä¸ªç‚¹æ‰¾æœ€åçš„å¤§è½å·®
                                     int16_t _point_threshold = k_;
                                     for (int16_t j = k_; j > k_ - 5; --j)
                                     {
@@ -1203,18 +1203,18 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                             }
                                             _total_offset += right_consecutive_point_offset[j];
                                         }
-                                        // ÅĞ¶ÏÎªĞüÑÂ
+                                        // åˆ¤æ–­ä¸ºæ‚¬å´–
                                         float _average_offset = _total_offset / 5;
                                         if (_is_continue_polarity && _average_offset < 1.5 && _average_offset <= 0)
                                         {
                                             fix_right_tail.fix_point_type = CLIFF;
                                             fix_right_tail.pos_col = _point_threshold - 2;
                                         }
-                                        // ÅĞ¶ÏÎªÔ²»¡
+                                        // åˆ¤æ–­ä¸ºåœ†å¼§
                                         else if (_average_offset > 2)
                                         {
                                             fix_right_tail.fix_point_type = ARC_RIGHT;
-                                            // ÕÒ×îĞ¡µÄ
+                                            // æ‰¾æœ€å°çš„
                                             int _min_cols = right_line[_point_threshold];
                                             for (int16_t j = _point_threshold; j > 0; --j)
                                             {
@@ -1233,12 +1233,12 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                     }
                 }
-                // ¶ÔÓÚÓÒÏß£¬ÈçºÎ³öÏÖÕı³£µÄÕıÂä²î·Ç³£´óµÄµã£¬Ôò¿ÉÊÓÎªĞèÒª²¹Ïß
+                // å¯¹äºå³çº¿ï¼Œå¦‚ä½•å‡ºç°æ­£å¸¸çš„æ­£è½å·®éå¸¸å¤§çš„ç‚¹ï¼Œåˆ™å¯è§†ä¸ºéœ€è¦è¡¥çº¿
                 if (fix_right_tail.pos_col == NO_DEFINE_VALUE && right_consecutive_point_offset[i] > 30
                     && right_line[i] - (int16_t)right_line[i + 2] < -30)
                 {
                     // output += "SIGN_RIGHT_2:" + std::to_string(i) + "\r\n";
-                    // ÍùºóÑéÖ¤¿´¿´ÊÇ·ñÕâ¸öÂä²î´óµÄµØ·½ÊÇÕı³£µÄ
+                    // å¾€åéªŒè¯çœ‹çœ‹æ˜¯å¦è¿™ä¸ªè½å·®å¤§çš„åœ°æ–¹æ˜¯æ­£å¸¸çš„
                     bool is_normal = true;
                     bool is_arc = false;
                     uint8_t min_right_point_tail_col = right_line[i];
@@ -1253,7 +1253,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                         else if (right_consecutive_point_offset[j] < -4)
                         {
-                            // ÑéÖ¤ÊÇ·ñÓöµ½Ô²»·
+                            // éªŒè¯æ˜¯å¦é‡åˆ°åœ†ç¯
                             is_normal = false;
                             for (int16_t k_ = j; k_ >= 5; k_--)
                             {
@@ -1272,7 +1272,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             min_right_point_tail_row = j;
                         }
                     }
-                    // ÖØĞÂÑéÖ¤ÊÇ·ñÕæµÄÓöµ½Ô²»·
+                    // é‡æ–°éªŒè¯æ˜¯å¦çœŸçš„é‡åˆ°åœ†ç¯
                     if (is_arc = false)
                     {
                         for (int16_t k_ = i - 6; k_ >= 5; k_--)
@@ -1285,7 +1285,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             }
                         }
                     }
-                    // ÍùÉãÏñÍ··½ÏòÕÒ²¹ÏßÍ·
+                    // å¾€æ‘„åƒå¤´æ–¹å‘æ‰¾è¡¥çº¿å¤´
                     if (is_normal)
                     {
                         uint8_t min_right_point_head_col = src_cols - 1;
@@ -1298,7 +1298,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                 min_right_point_head_row = j;
                             }
                         }
-                        // ÑéÖ¤×î´óµÄµãÊÇ²»ÊÇÕı³£µã
+                        // éªŒè¯æœ€å¤§çš„ç‚¹æ˜¯ä¸æ˜¯æ­£å¸¸ç‚¹
                         bool is_normal_min_point = true;
                         for (int16_t j = min_right_point_head_row; j < min_right_point_head_row + 4; ++j)
                         {
@@ -1333,7 +1333,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 {
                     // output += "SIGN_14_2:IN_RIGHT\r\n";
                     int16_t temp_fix_right_tail_pos_col_rows = -1;
-                    // ÍùºóËÑÖ±µ½ËÑµ½Á½µã¼ä¾àÎª1
+                    // å¾€åæœç›´åˆ°æœåˆ°ä¸¤ç‚¹é—´è·ä¸º1
                     for (int16_t j = i; j >= 0; --j)
                     {
                         if (right_consecutive_point_offset[j] <= 2)
@@ -1344,7 +1344,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     }
                     if (temp_fix_right_tail_pos_col_rows != -1 && i - temp_fix_right_tail_pos_col_rows <= 3)
                     {
-                        // Íù³µÇ°ËÑ¿´¿´ÊÇ·ñËÑµ½Á¬ĞøµÄÓÒÏßÎªsrc_cols - 1
+                        // å¾€è½¦å‰æœçœ‹çœ‹æ˜¯å¦æœåˆ°è¿ç»­çš„å³çº¿ä¸ºsrc_cols - 1
                         uint8_t num_right_col_ = 0;
                         for (int16_t j = i + 1; j <= i + 7; ++j)
                         {
@@ -1411,14 +1411,14 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
     {
         case OUT_CARBARN :
         {
-            // ³ö¿â´òËÀ
+            // å‡ºåº“æ‰“æ­»
             // pwm_duty(PWM1_MODULE3_CHB_D1, pwm_right);
             // pwm_duty(PWM2_MODULE3_CHA_D2, pwm_left); // 8000
             /*
              if (is_right_out)
-             pwm_duty(PWM4_MODULE2_CHA_C30, 5080); // 5750ÖĞ, 6420×ó, 5080ÓÒ
+             pwm_duty(PWM4_MODULE2_CHA_C30, 5080); // 5750ä¸­, 6420å·¦, 5080å³
              else
-             pwm_duty(PWM4_MODULE2_CHA_C30, 6420); // 5750ÖĞ, 6420×ó, 5080ÓÒ
+             pwm_duty(PWM4_MODULE2_CHA_C30, 6420); // 5750ä¸­, 6420å·¦, 5080å³
              */
             road_type = NO_FIX_ROAD;
             // float k_line = -2.4;
@@ -1467,7 +1467,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     left_line[t] = temp;
                 }
             }
-            // ×ó»·µÀ¼ì²âÈë¿Ú
+            // å·¦ç¯é“æ£€æµ‹å…¥å£
             uint8_t right_line_begin_ = src_rows - 1;
             for (int i_find_right_line_begin_ = src_rows - 1; i_find_right_line_begin_ >= 0; --i_find_right_line_begin_)
             {
@@ -1478,8 +1478,8 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
             }
 
-//            // ×óÈı²æÈë¿Ú¼ì²â
-//            // ÏÈÍù»ØÕÒĞüÑÂµã
+//            // å·¦ä¸‰å‰å…¥å£æ£€æµ‹
+//            // å…ˆå¾€å›æ‰¾æ‚¬å´–ç‚¹
 //            if (fix_left_head.fix_point_type == NO_DEFINE_VALUE_FIX_POINT)
 //            {
 //                uint8_t i_cliff = fix_left_tail.pos_col;
@@ -1490,7 +1490,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 //                        i_cliff = i;
 //                    }
 //                }
-//                bool is_left_T = true;      // ÊÇ·ñÓöµ½×ó»·µÀ
+//                bool is_left_T = true;      // æ˜¯å¦é‡åˆ°å·¦ç¯é“
 //                for (int16_t i = i_cliff; i >= 0; --i)
 //                {
 //                    bool is_white = false;
@@ -1517,7 +1517,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
             if (end_src_rows < 3)
             {
-                // 2022Äê5ÔÂ26ÈÕ
+                // 2022å¹´5æœˆ26æ—¥
                 uint8_t num_err = 0;
                 StraightLineCoeffic straight_line_coeffic = LinearRegress(right_line, end_src_rows + 1,
                         right_line_begin_);
@@ -1535,7 +1535,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     road_type = LEFT_ROTARY_IN_FIRST_SUNKEN;
                 }
             }
-            // ×ó»·µÀ¼ì²â³ö¿Ú
+            // å·¦ç¯é“æ£€æµ‹å‡ºå£
             if (road_type == NO_FIX_ROAD)
             {
                 fix_left_tail.pos_col = NO_DEFINE_VALUE;
@@ -1558,7 +1558,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     right_line[t] = temp;
                 }
             }
-            // ÓÒ»·µÀ¼ì²âÈë¿Ú
+            // å³ç¯é“æ£€æµ‹å…¥å£
             uint8_t left_line_begin_ = src_rows - 1;
             for (int i_find_left_line_begin_ = src_rows - 1; i_find_left_line_begin_ >= 0; --i_find_left_line_begin_)
             {
@@ -1569,8 +1569,8 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
             }
 
-//            // ÓÒÈı²æÈë¿Ú¼ì²â
-//            // ÏÈÍù»ØÕÒĞüÑÂµã
+//            // å³ä¸‰å‰å…¥å£æ£€æµ‹
+//            // å…ˆå¾€å›æ‰¾æ‚¬å´–ç‚¹
 //            if (fix_right_head.fix_point_type == NO_DEFINE_VALUE_FIX_POINT)
 //            {
 //                uint8_t i_cliff = fix_right_tail.pos_col;
@@ -1581,7 +1581,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 //                        i_cliff = i;
 //                    }
 //                }
-//                bool is_right_T = true;     // ÊÇ·ñÓöµ½×ó»·µÀ
+//                bool is_right_T = true;     // æ˜¯å¦é‡åˆ°å·¦ç¯é“
 //                for (int16_t i = i_cliff; i >= 0; --i)
 //                {
 //                    bool is_white = false;
@@ -1608,7 +1608,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
             if (end_src_rows < 3)
             {
-                // 2022Äê5ÔÂ26ÈÕ
+                // 2022å¹´5æœˆ26æ—¥
                 uint8_t num_err = 0;
                 StraightLineCoeffic straight_line_coeffic = LinearRegress(left_line, end_src_rows + 1,
                         left_line_begin_);
@@ -1626,7 +1626,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     road_type = RIGHT_ROTARY_IN_FIRST_SUNKEN;
                 }
             }
-            // ÓÒ»·µÀ¼ì²â³ö¿Ú
+            // å³ç¯é“æ£€æµ‹å‡ºå£
             if (road_type == NO_FIX_ROAD)
             {
                 fix_right_head.pos_col = NO_DEFINE_VALUE;
@@ -1647,7 +1647,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 {
                     if (left_consecutive_point_offset[i] + left_consecutive_point_offset[i - 1] < -45)
                     {
-                        // ÍùÉÏÕÒµã
+                        // å¾€ä¸Šæ‰¾ç‚¹
                         for (int16_t j = i - 1; j >= i - 15; --j)
                         {
                             bool is_white = false;
@@ -1790,7 +1790,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
         case IN_LEFT_ROTARY :
         {
-            // Ô¤ÏÈÕÒÍ»±äµã£¬ÔÚÍ»±äµãÖ®Ç°¾ø²»¿ÉÒÔ³öÏÖleft_line[x] == right_line[x]µÄÇé¿ö
+            // é¢„å…ˆæ‰¾çªå˜ç‚¹ï¼Œåœ¨çªå˜ç‚¹ä¹‹å‰ç»ä¸å¯ä»¥å‡ºç°left_line[x] == right_line[x]çš„æƒ…å†µ
             bool is_fix_out_rotary = false;
             for (int16_t i = src_rows - 5; i > 0 && left_line[i] != right_line[i]; --i)
             {
@@ -1809,7 +1809,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
         case IN_RIGHT_ROTARY :
         {
-            // Ô¤ÏÈÕÒÍ»±äµã
+            // é¢„å…ˆæ‰¾çªå˜ç‚¹
             bool is_fix_out_rotary = false;
             for (int16_t i = src_rows - 5; i > 0 && left_line[i] != right_line[i]; --i)
             {
@@ -1861,7 +1861,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             {
                 if (go_in_rotary_stage_left == 0 && fix_left_tail.fix_point_type == CLIFF)
                 {
-                    // Òıµ¼Ïß
+                    // å¼•å¯¼çº¿
                     int16_t top_angle_rows = fix_left_tail.pos_col;
                     int16_t top_angle_cols = left_line[top_angle_rows];
                     int16_t buttom_angle_rows = src_rows - 1;
@@ -1998,7 +1998,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             {
                 if (go_in_rotary_stage_right == 0 && fix_right_tail.fix_point_type == CLIFF)
                 {
-                    // Òıµ¼Ïß
+                    // å¼•å¯¼çº¿
                     int16_t top_angle_rows = fix_right_tail.pos_col;
                     int16_t top_angle_cols = right_line[top_angle_rows];
                     int16_t buttom_angle_rows = src_rows - 1;
@@ -2119,7 +2119,7 @@ void EdgeDetect(uint8_t **binary_img, uint8_t **edge_img, size_t src_rows, size_
 void EdgeDetect (uint8_t **binary_img, uint8_t **edge_img, uint8_t src_rows, uint8_t src_cols)
 #endif // LOWER_COMPUTER
 {
-    static uint16_t ConKernel[5]; //±ßÔµ¾í»ıºË
+    static uint16_t ConKernel[5]; //è¾¹ç¼˜å·ç§¯æ ¸
     for (uint16_t i = 0; i < src_rows; i++)
     {
         for (uint16_t j = 0; j < src_cols; j++)
@@ -2132,7 +2132,7 @@ void EdgeDetect (uint8_t **binary_img, uint8_t **edge_img, uint8_t src_rows, uin
                 ConKernel[3] = binary_img[i][j + 1];
                 ConKernel[4] = binary_img[i][j];
                 if (IsEdge(ConKernel, 0))
-                    edge_img[i][j] = 0; //±ß½çÑÕÉ«ÎªºÚ
+                    edge_img[i][j] = 0; //è¾¹ç•Œé¢œè‰²ä¸ºé»‘
                 else
                     edge_img[i][j] = 255;
             }
@@ -2149,8 +2149,8 @@ uint8_t FindStraightLine(size_t *mid_line, size_t src_rows, size_t src_cols, std
 uint8_t FindStraightLine (uint8_t *mid_line, uint8_t src_rows, uint8_t src_cols)
 #endif // LOWER_COMPUTER
 {
-    // Hough ±ä»»: r = x * cos(angle) + y * sin(angle)
-    // ¶ÔÖĞÏßÇ°Ò»¶Î½øĞĞ»ô·ò±ä»»
+    // Hough å˜æ¢: r = x * cos(angle) + y * sin(angle)
+    // å¯¹ä¸­çº¿å‰ä¸€æ®µè¿›è¡Œéœå¤«å˜æ¢
     StraightLineCoeffic straight_line_coeffic = LinearRegress(mid_line, src_rows - 5, src_rows - 1);
     float k = straight_line_coeffic.k;
     float angle = atan(-k);
@@ -2248,7 +2248,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         CHECK_RANGE(right_line[i], 0, src_cols, user_data_for_output);
 #endif // UPPER_COMPUTER
     }
-    // ×¢Òâend_continue_line Ğ¡ÓÚ»òµÈÓÚ start_continue_line
+    // æ³¨æ„end_continue_line å°äºæˆ–ç­‰äº start_continue_line
     uint8_t end_continue_line = 0;
     uint8_t start_continue_line =
             start_line_right - end_line_right > start_line_left - end_line_left ?
@@ -2258,10 +2258,10 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
 
     uint16_t quadratic_start_index = 0;
     uint16_t quadratic_end_index = 0;
-    // ¼ÙÈçstart_line ¹ıĞ¡(Ğ¡ÓÚÄ³¸öãĞÖµ), ÄÇÃ´¿ÉÒÔ¿´ÎªÄ¿Ç°Ğ¡³µËùÔÚµÄÂ·¶ÎÎŞ×óÓÒ±ßÏß, ¶æ»ú±£³Ö½Ç¶È
+    // å‡å¦‚start_line è¿‡å°(å°äºæŸä¸ªé˜ˆå€¼), é‚£ä¹ˆå¯ä»¥çœ‹ä¸ºç›®å‰å°è½¦æ‰€åœ¨çš„è·¯æ®µæ— å·¦å³è¾¹çº¿, èˆµæœºä¿æŒè§’åº¦
     if (start_continue_line >= MIN_START_CONTINUE_LINE && start_continue_line > end_continue_line)
     {
-        // ÊÇ·ñ´æÔÚÖ±Ïß
+        // æ˜¯å¦å­˜åœ¨ç›´çº¿
 #ifdef UPPER_COMPUTER
         uint8_t straightline_end_point = FindStraightLine(mid_line, src_rows, src_cols, user_data_for_output);
         user_data_for_output += "straight_line:" + std::to_string(straightline_end_point) + "\r\n";
@@ -2284,7 +2284,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         }
 
         int16_t se_offset = start_continue_line - end_continue_line;
-        quadratic_start_index = end_continue_line <= end_src_rows ? end_src_rows + 1 : start_continue_line; // ×¢Òâquadratic_start_index Ñ¡ÔñĞ¡µÄÏß
+        quadratic_start_index = end_continue_line <= end_src_rows ? end_src_rows + 1 : start_continue_line; // æ³¨æ„quadratic_start_index é€‰æ‹©å°çš„çº¿
         quadratic_end_index = start_continue_line;
         if (straightline_end_point != src_rows - 1 && straightline_end_point > quadratic_start_index)
         {
@@ -2295,7 +2295,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
             quadratic_end_index = src_rows >> 1;
         }
 
-        //// test: ÄâºÏ¶ş´ÎÇúÏß
+        //// test: æ‹ŸåˆäºŒæ¬¡æ›²çº¿
 
 //        if (quadratic_end_index > quadratic_start_index)
 //        {
@@ -2306,7 +2306,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
 //            }
 //        }
 
-        // ¼ÆËãÈüµÀÖĞÏßĞ±ÂÊ
+        // è®¡ç®—èµ›é“ä¸­çº¿æ–œç‡
         /*if (se_offset > 15)
          {
          quadratic_end_index = quadratic_start_index + se_offset >> 1;
@@ -2316,9 +2316,9 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
          {
          mid_line[i] = straight_line_coeffic.k * i + straight_line_coeffic.a;
          }*/
-        // ¼ÆËãÇúÂÊ
+        // è®¡ç®—æ›²ç‡
         // float curve = CurvatureCal(mid_line, quadratic_start_index, quadratic_end_index);
-        // Í¸ÊÓ±ä»»ÖĞÏß
+        // é€è§†å˜æ¢ä¸­çº¿
         for (uint8_t i = 0; i < src_rows; ++i)
         {
             float x, y, w;
@@ -2336,7 +2336,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
             }
         }
 
-        // ¼ÆËãĞ±ÂÊ
+        // è®¡ç®—æ–œç‡
         uint8_t cur_cal_end_point = (src_rows >> 2) * 3 - 2;
         uint8_t cur_cal_start_point = src_rows - 2;
         cur_cal_end_point = (cur_cal_end_point < end_src_rows) ? (end_src_rows - 2) : cur_cal_end_point;
@@ -2368,7 +2368,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                         * (mid_line_perspective_transform[(cur_cal_start_point)].y
                                 - mid_line_perspective_transform[(cur_cal_end_point)].y))) / 4.9;
         curve = 1.9 * curve * curve * curve / 3 + 0.9 * curve / 3.0;
-        // ¼ì²âÊÇ·ñÈ±Ïß, ÓÒÕı£¬×ó¸º
+        // æ£€æµ‹æ˜¯å¦ç¼ºçº¿, å³æ­£ï¼Œå·¦è´Ÿ
         int16_t no_line = 0;
         for (int16_t i = cur_cal_start_point; i >= cur_cal_end_point; --i)
         {

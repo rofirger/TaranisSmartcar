@@ -13,9 +13,9 @@ PID_STRUCT PID_Data;
 
 static float E_TABLE[]={-3,-2,-1,0,1,2,3};
 static float EC_TABLE[]={-3,-2,-1,0,1,2,3};
-static float KpTABLE[]={0.0,0.3,0.6,1.2};
-static float KiTABLE[]={0.2,0.4,0.6,0.9};
-static float KdTABLE[]={0.00,0.01,0.02,0.03};
+static float KpTABLE[]={0.4,0.3,0.6,1.2};
+static float KiTABLE[]={0.1,0.12,0.16,0.19};
+static float KdTABLE[]={0.4,0.6,0.8,1.0};
 //模糊规则到时候再慢慢调
 static char KpRULE[7][7]=
 {

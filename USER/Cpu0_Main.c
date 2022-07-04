@@ -32,22 +32,22 @@ uint8_t left_line[MT9V03X_H];
 uint8_t mid_line[MT9V03X_H];
 uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
-int16_t LEFT_SPEED_BASE = 250;
-int16_t RIGHT_SPEED_BASE = 250;
+int16_t LEFT_SPEED_BASE = 260;
+int16_t RIGHT_SPEED_BASE = 260;
 
-int16_t left_speed = 0, right_speed = 0;
+int16_t left_speed = 260, right_speed = 260;
 extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
 // 舵机PD
-PID pid_steer = {0.82, 0, 1.3};
+PID pid_steer = {0.82, 0, 1.23};
 PosErr error_steer = {{0, 0, 0}, 0};
 int32_t steer_pwm = 625;
 bool is_right_out = false;
 // 电机PID
-PID pid_motor_left = {3.8, 3, 10};
+PID pid_motor_left = {2.8, 3, 0};
 Error error_motor_left = {0, 0, 0};
-PID pid_motor_right = {3.8, 3, 10};
+PID pid_motor_right = {2.8, 3, 0};
 Error error_motor_right = {0, 0, 0};
 // 电机
 uint32_t pwm_right = 2200;
@@ -126,7 +126,7 @@ void SendImg (uint8_t *_img, uint16_t _width, uint16_t _height)
     uart_putchar(WIRELESS_UART, 0x01);
 }
 
-bool is_go = false;
+bool is_go = true;
 
 void Stop ()
 {
@@ -211,6 +211,14 @@ int core0_main (void)
             {
                 slope -= 0.1;
             }
+            if (road_type == IN_LEFT_ROTARY || road_type == IN_RIGHT_ROTARY)
+            {
+                slope *= 1.13;
+            }
+            if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN || road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+            {
+                slope *= 1.15;
+            }
             Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
             steer_pwm = 625 + atan(slope) * 95;
@@ -222,10 +230,10 @@ int core0_main (void)
             if (road_type != IN_CARBARN)
             {
                 pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
-//                left_speed = LEFT_SPEED_BASE + (steer_pwm / 75) * 18;
-//                right_speed = RIGHT_SPEED_BASE - (steer_pwm / 75) * 18;
-                pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 100 );    // 右轮前进
-                pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 100);    // 左轮前进
+                left_speed = LEFT_SPEED_BASE - slope * 10;
+                right_speed = RIGHT_SPEED_BASE + slope * 10;
+                //pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 110 );    // 右轮前进
+                //pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 110);    // 左轮前进
             }
             else if (road_type == IN_CARBARN)
             {

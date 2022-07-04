@@ -24,6 +24,7 @@
 #include "isr.h"
 #include "stdint.h"
 #include "img_process.h"
+#include "fuzzy_pid.h"
 
 extern bool is_go;
 extern PID pid_motor_left;
@@ -36,6 +37,10 @@ int16_t left_encoder;
 int16_t right_encoder;
 int16_t target_pwm_left;
 int16_t target_pwm_right;
+
+PID_STRUCT left_motor_pid_structrue = {0, 0, 0, 0, 0, 0};
+PID_STRUCT right_motor_pid_structrue = {0, 0, 0, 0, 0, 0};
+
 //PITÖÐ¶Ïº¯Êý  Ê¾Àý
 IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 {
@@ -48,6 +53,9 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 	{
 	    target_pwm_left += PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
 	    target_pwm_right += PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+	    //target_pwm_left += PID_Calc(&left_motor_pid_structrue, left_speed, left_encoder);
+	    //target_pwm_right += PID_Calc(&right_motor_pid_structrue, right_speed, right_encoder);
+
 	    if (target_pwm_left > 5000 || target_pwm_left < 0)
 	        target_pwm_left = 0;
 	    if (target_pwm_right > 5000 || target_pwm_right < 0)

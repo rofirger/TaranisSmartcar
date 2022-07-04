@@ -10,3 +10,5 @@ isr.o :	../USER/isr.h
 ../USER/isr.h :
 isr.o :	../USER/img_process.h
 ../USER/img_process.h :
+isr.o :	../USER/fuzzy_pid.h
+../USER/fuzzy_pid.h :
