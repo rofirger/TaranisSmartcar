@@ -9,7 +9,7 @@
 #include "img_process.h"
 
 // ¶æ»úPD
-PID pid_steer = {0.834, 0, 4.925};
+PID pid_steer = {0.830, 0, 4.625};
 PosErr error_steer = {{0, 0, 0}, 0};
 
 

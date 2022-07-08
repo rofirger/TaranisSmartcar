@@ -22,6 +22,7 @@ Pos mid_line_perspective_transform[MT9V03X_H];
 // 下位机
 #define LOWER_COMPUTER
 
+
 /*
  * 二值化函数
  */
@@ -755,8 +756,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             int16_t _j_find_cliff = i;
                             for (_j_find_cliff; _j_find_cliff >= end_src_rows; --_j_find_cliff)
                             {
-                                if (left_consecutive_point_offset[_j_find_cliff]
-                                        < LEFT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL - 6)
+                                if (left_consecutive_point_offset[_j_find_cliff] < LEFT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL - 6)
                                 {
                                     is_meet_left_cliff_threshold_offset = true;
                                     break;
@@ -806,7 +806,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // 必须能在往回的五个点内找到，否则视为不存在.后一个条件是为了避免溢出
                         {
                             if (ABS(left_consecutive_point_offset[k_]) < 3
-                                    && ABS(left_consecutive_point_offset[k_ + 1]) < 3)
+                                && ABS(left_consecutive_point_offset[k_ + 1]) < 3)
                             {
                                 left_head_time = k_ + 1;
                                 break; // 找到并返回
@@ -824,7 +824,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                     sum_train_ele += left_consecutive_point_offset[_t];
                                 }
                                 if (ABS(sum_train_ele) < 7
-                                        && left_line[i + 1] - (int16_t) left_line[k_ - train_ele_num / 2] > 10)
+                                    && left_line[i + 1] - (int16_t)left_line[k_ - train_ele_num / 2] > 10)
                                 {
                                     fix_left_head.pos_col = i + 1;
                                     fix_left_head.fix_point_type = CLIFF;
@@ -907,7 +907,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
                 // 对于左线，如何出现正常的负落差非常大的点，则可视为需要补线
                 if (fix_left_tail.pos_col == NO_DEFINE_VALUE && left_consecutive_point_offset[i] < -30
-                        && left_line[i] - (int16_t) left_line[i + 2] > 30)
+                    && left_line[i] - (int16_t)left_line[i + 2] > 30)
                 {
                     // 往后验证看看是否这个落差大的地方是正常的
                     bool is_normal = true;
@@ -916,7 +916,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     uint8_t max_left_point_tail_row = i;
                     for (int16_t j = i - 1; j > 0 && j > i - 10; --j)
                     {
-                        if (right_line[j] - (int16_t) left_line[j] < 10)
+                        if (right_line[j] - (int16_t)left_line[j] < 10)
                         {
                             is_normal = false;
                             is_arc = false;
@@ -995,12 +995,12 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             if (fix_left_tail.pos_col == NO_DEFINE_VALUE)
             {
                 if (((road_type == LEFT_ROTARY_IN_FIRST_SUNKEN
-                        || (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_left == 0))
+                    || (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_left == 0))
+                    && (left_consecutive_point_offset[i] <= 0 && left_consecutive_point_offset[i + 1] <= 0
+                        && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -30))
+                    || (go_in_rotary_stage_left == 1
                         && (left_consecutive_point_offset[i] <= 0 && left_consecutive_point_offset[i + 1] <= 0
-                                && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -30))
-                        || (go_in_rotary_stage_left == 1
-                                && (left_consecutive_point_offset[i] <= 0 && left_consecutive_point_offset[i + 1] <= 0
-                                        && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -30)))
+                            && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -30)))
                 {
                     int16_t temp_fix_left_tail_pos_col_rows = -1;
                     // 往后搜直到搜到两点间距为1
@@ -1039,7 +1039,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             if (fix_right_head.pos_col == NO_DEFINE_VALUE)
             {
                 if (right_line[i + 1] == src_cols - 1 && right_line[i + 2] == src_cols - 1
-                        && right_line[i + 3] == src_cols - 1 && i > src_rows - 10) // 右线不可见时[暂时]视为遇到在某个特殊元素中
+                    && right_line[i + 3] == src_cols - 1 && i > src_rows - 10) // 右线不可见时[暂时]视为遇到在某个特殊元素中
                 {
                     // 判断是否含断点
                     uint8_t num_little_offset = 0;
@@ -1087,8 +1087,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             int16_t _j_find_cliff = i;
                             for (_j_find_cliff = i; _j_find_cliff >= end_src_rows; --_j_find_cliff)
                             {
-                                if (right_consecutive_point_offset[_j_find_cliff]
-                                        > RIGHT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL + 6)
+                                if (right_consecutive_point_offset[_j_find_cliff] > RIGHT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL + 6)
                                 {
                                     is_meet_right_cliff_threshold_offset = true;
                                     break;
@@ -1138,8 +1137,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             bool _is_find_right_cliff = false;
                             for (_j_find_cliff; _j_find_cliff > 5; --_j_find_cliff)
                             {
-                                if (right_consecutive_point_offset[_j_find_cliff]
-                                        > RIGHT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL)
+                                if (right_consecutive_point_offset[_j_find_cliff] > RIGHT_LINE_TAIL_OFFSET_THRESHOLD_NORMAL)
                                 {
                                     _is_find_right_cliff = true;
                                     break;
@@ -1188,7 +1186,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         for (int16_t k_ = i; k_ < i + 6 && k_ < src_rows - 3; ++k_) // 必须能在往回的五个点内找到，否则视为不存在.后一个条件是为了避免溢出
                         {
                             if (ABS(right_consecutive_point_offset[k_]) < 3
-                                    && ABS(right_consecutive_point_offset[k_ + 1]) < 3)
+                                && ABS(right_consecutive_point_offset[k_ + 1]) < 3)
                             {
                                 right_head_time = k_ + 1;
                                 break; // 找到并返回
@@ -1206,7 +1204,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                                     sum_train_ele += right_consecutive_point_offset[_t];
                                 }
                                 if (ABS(sum_train_ele) < 5
-                                        && right_line[k_ - train_ele_num / 2] - (int16_t) right_line[i + 1] > 10)
+                                    && right_line[k_ - train_ele_num / 2] - (int16_t)right_line[i + 1] > 10)
                                 {
                                     fix_right_head.pos_col = i + 1;
                                     fix_right_head.fix_point_type = CLIFF;
@@ -1285,7 +1283,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
                 // 对于右线，如何出现正常的正落差非常大的点，则可视为需要补线
                 if (fix_right_tail.pos_col == NO_DEFINE_VALUE && right_consecutive_point_offset[i] > 30
-                        && right_line[i] - (int16_t) right_line[i + 2] < -30)
+                    && right_line[i] - (int16_t)right_line[i + 2] < -30)
                 {
                     // output += "SIGN_RIGHT_2:" + std::to_string(i) + "\r\n";
                     // 往后验证看看是否这个落差大的地方是正常的
@@ -1295,7 +1293,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     uint8_t min_right_point_tail_row = i;
                     for (int16_t j = i - 1; j > 0 && j > i - 10; --j)
                     {
-                        if (right_line[j] - (int16_t) left_line[j] < 10)
+                        if (right_line[j] - (int16_t)left_line[j] < 10)
                         {
                             is_normal = false;
                             is_arc = false;
@@ -1308,7 +1306,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                             for (int16_t k_ = j; k_ >= 5; k_--)
                             {
                                 int16_t three_right_avea = (right_line[k_] + right_line[k_ - 1] + right_line[k_ - 2])
-                                        / 3;
+                                    / 3;
                                 if (three_right_avea - min_right_point_tail_col > 20)
                                 {
                                     is_arc = true;
@@ -1374,13 +1372,12 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             if (fix_right_tail.pos_col == NO_DEFINE_VALUE)
             {
                 if (((road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN
-                        || (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_right == 0))
+                    || (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_right == 0))
+                    && (right_consecutive_point_offset[i] >= 0 && right_consecutive_point_offset[i + 1] >= 0
+                        && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1] > 30))
+                    || (go_in_rotary_stage_right == 1
                         && (right_consecutive_point_offset[i] >= 0 && right_consecutive_point_offset[i + 1] >= 0
-                                && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1] > 30))
-                        || (go_in_rotary_stage_right == 1
-                                && (right_consecutive_point_offset[i] >= 0 && right_consecutive_point_offset[i + 1] >= 0
-                                        && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1]
-                                                > 30)))
+                            && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1] > 30)))
                 {
                     // output += "SIGN_14_2:IN_RIGHT\r\n";
                     int16_t temp_fix_right_tail_pos_col_rows = -1;
@@ -1941,9 +1938,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point - 2 > 0)
                         {
                             left_line[_j] = 0;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 2] < threshold_val)
                             {
                                 left_line[_j] = cur_point;
                                 break;
@@ -1955,9 +1952,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point + 2 < src_cols)
                         {
                             right_line[_j] = src_cols - 1;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 2] < threshold_val)
                             {
                                 right_line[_j] = cur_point;
                                 break;
@@ -1993,9 +1990,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point - 2 > 0)
                         {
                             left_line[_j] = 0;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 2] < threshold_val)
                             {
                                 left_line[_j] = cur_point;
                                 break;
@@ -2007,9 +2004,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point + 2 < src_cols)
                         {
                             right_line[_j] = src_cols - 1;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 2] < threshold_val)
                             {
                                 right_line[_j] = cur_point;
                                 break;
@@ -2147,9 +2144,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point - 2 > 0)
                         {
                             left_line[_j] = 0;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 2] < threshold_val)
                             {
                                 left_line[_j] = cur_point;
                                 break;
@@ -2161,9 +2158,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point + 2 < src_cols)
                         {
                             right_line[_j] = src_cols - 1;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 2] < threshold_val)
                             {
                                 right_line[_j] = cur_point;
                                 break;
@@ -2198,9 +2195,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point - 2 > 0)
                         {
                             left_line[_j] = 0;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point - 2] < threshold_val)
                             {
                                 left_line[_j] = cur_point;
                                 break;
@@ -2212,9 +2209,9 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         while (cur_point + 2 < src_cols)
                         {
                             right_line[_j] = src_cols - 1;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 2] < threshold_val)
+                            if (src_pixel_mat[_j][cur_point] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 1] < threshold_val &&
+                                src_pixel_mat[_j][cur_point + 2] < threshold_val)
                             {
                                 right_line[_j] = cur_point;
                                 break;
@@ -2382,7 +2379,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
     uint8_t end_src_rows = 0;
     for (int i = src_rows - 1; i >= 0; --i)
     {
-        if (ABS(left_line[i] - (int)right_line[i]) < 3)
+        if (ABS(left_line[i] - (int)right_line[i]) < 5)
         {
             end_src_rows = i;
             break;
@@ -2394,10 +2391,10 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
     FixRoad(left_line, right_line, src_rows, src_cols, end_src_rows, threshold_value);
 
     bool is_finish_end_src = false;
-    for (int16_t i = src_rows - 1; i >=0 ; --i)
+    for (uint8_t i = 0; i < src_rows; ++i)
     {
         mid_line[i] = (left_line[i] + right_line[i]) / 2;
-        if (!is_finish_end_src && right_line[i] - (int)left_line[i] < 5)
+        if (!is_finish_end_src && ABS(right_line[i] - (int)left_line[i]) < 5)
         {
             end_src_rows = i;
             is_finish_end_src = true;
@@ -2546,8 +2543,9 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         else
         {
             curve = (float) (mid_line_perspective_transform[cur_cal_start_point].x
-                    - mid_line_perspective_transform[cur_cal_end_point].x) / 1;
+                                - mid_line_perspective_transform[cur_cal_end_point].x) / 1;
         }
+
 
         int16_t offset = 0;
         for (int j = cur_cal_end_point; j < src_rows - 2; ++j)
@@ -2560,48 +2558,22 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                 / (float) ((mid_line_perspective_transform[(cur_cal_start_point)].y
                         - mid_line_perspective_transform[(cur_cal_end_point)].y)
                         * (mid_line_perspective_transform[(cur_cal_start_point)].y
-                                - mid_line_perspective_transform[(cur_cal_end_point)].y))) / 4.6;
-//        // 提前入弯
-//        uint8_t _zero_line_end = end_src_rows;
-//        uint8_t _zero_line_start = src_rows - 1;
+                                - mid_line_perspective_transform[(cur_cal_end_point)].y))) / 4.4;
+        // 提前入弯
+//        uint8_t _zero_line = end_src_rows;
 //        uint8_t _line_kind = 0;             // 1是左线，2是右线
 //        for (int16_t _i = end_src_rows; _i < src_rows; ++_i)
 //        {
 //            if (_line_kind == 0)
 //            {
 //                if (left_line[_i] == 0)
-//                {
-//                    _zero_line_end = _i;
-//                    _line_kind = 1;
-//                }
+//                    _zero_line = _i;
 //                else if (right_line[_i] == src_cols - 1)
-//                {
-//                    _zero_line_end = _i;
-//                    _line_kind = 2;
-//                }
-//                else if (_i > end_src_rows + 4)
-//                    break;
-//            }
-//            else if (_line_kind == 1 && left_line[_i] != 0)
-//            {
-//                _zero_line_start = _i;
-//                break;
-//            }
-//            else if (_line_kind == 2 && right_line[_i] != src_cols - 1)
-//            {
-//                _zero_line_start = _i;
-//                break;
+//                    _zero_line = _i;
+//                else
 //            }
 //        }
-//        //lcd_showuint16(0, 5, _zero_line_start);
-//        //lcd_showuint16(50, 5, _zero_line_end);
-//        if (_line_kind != 0 && _zero_line_start - _zero_line_end > 6 && _zero_line_start > 15)
-//        {
-//            if (_line_kind == 1)
-//                curve += (float)(_zero_line_start - 15) / 50 * 0.25;
-//            else if (_line_kind == 2)
-//                curve -= (float)(_zero_line_start - 15) / 50 * 0.25;
-//        }
+
         // 检测是否缺线, 右正，左负
         int16_t no_line = 0;
         for (int16_t i = cur_cal_start_point; i >= cur_cal_end_point; --i)
@@ -2618,17 +2590,17 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
             if (no_line < 0)
             {
                 // 统计右线靠摄像头方位的横坐标平均值
-                for (int16_t _j = src_rows; _j > src_rows - 10; --_j)
+                for (int16_t _j = src_rows; _j > src_rows - 10; -- _j)
                 {
                     _total_right_line_x += right_line[_j];
                 }
                 _total_right_line_x -= 1400;
-                curve += PID_Increase(&error_sharp_bend, &pid_sharp_bend, (float) _total_right_line_x, 0);
+                curve += PID_Increase(&error_sharp_bend, &pid_sharp_bend, (float)_total_right_line_x, 0);
             }
             else
             {
                 // 统计左线靠摄像头方位的横坐标平均值
-                for (int16_t _j = src_rows; _j > src_rows - 10; --_j)
+                for (int16_t _j = src_rows; _j > src_rows - 10; -- _j)
                 {
                     _total_right_line_x += left_line[_j];
                 }
@@ -2639,7 +2611,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
 
             //lcd_showint16(0, 5, _total_right_line_x);
         }
-        curve *= (1.211 * ABS((float )no_line / (float )(cur_cal_start_point - cur_cal_end_point)));
+        curve *= (1.218 * ABS((float )no_line / (float )(cur_cal_start_point - cur_cal_end_point)));
         *slope = curve;
     }
 }

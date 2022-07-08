@@ -223,7 +223,7 @@ int core0_main (void)
             {
                 slope -= 0.05;
             }
-            Stop();
+            //Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
             steer_pwm = 625 + atan(slope) * 95;
             if (steer_pwm > 700)
@@ -234,8 +234,8 @@ int core0_main (void)
             if (road_type != IN_CARBARN && is_go)
             {
 
-                left_speed = LEFT_SPEED_BASE - slope * 13.5;
-                right_speed = RIGHT_SPEED_BASE + slope * 13.5;
+                left_speed = LEFT_SPEED_BASE - slope * 14.5;
+                right_speed = RIGHT_SPEED_BASE + slope * 14.5;
                 //pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 110 );    // 右轮前进
                 //pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 110);    // 左轮前进
             }
