@@ -47,6 +47,9 @@ typedef enum RoadType
     IN_CARBARN
 } RoadType;
 
+// 用于控制代码
+typedef RoadType RoadTypeForControl;
+
 typedef enum FixPointType
 {
     ARC_LEFT, ARC_RIGHT, CLIFF, NO_DEFINE_VALUE_FIX_POINT, NO_TYPE
@@ -92,6 +95,10 @@ typedef struct PosErr
         Error err;
         float loc_sum;
 } PosErr;
+
+// 左右线重合
+
+
 float PID_Pos (PosErr *sptr, PID *pid, float now_point, float target_point);
 void GetHistGram (uint8_t width, uint8_t height);
 unsigned char OTSUThreshold ();

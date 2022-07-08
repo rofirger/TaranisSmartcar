@@ -1,5 +1,5 @@
 
- 
+
 /*********************************************************************************************************************
  * COPYRIGHT NOTICE
  * Copyright (c) 2020,Öð·É¿Æ¼¼
@@ -25,18 +25,16 @@
 #include "stdint.h"
 #include "img_process.h"
 #include "fuzzy_pid.h"
+#include "control.h"
 
 extern bool is_go;
-extern PID pid_motor_left;
-extern Error error_motor_left;
-extern PID pid_motor_right;
-extern Error error_motor_right;
+
 extern int16_t left_speed;
 extern int16_t right_speed;
-int16_t left_encoder;
-int16_t right_encoder;
-int16_t target_pwm_left;
-int16_t target_pwm_right;
+volatile int16_t left_encoder;
+volatile int16_t right_encoder;
+volatile int16_t target_pwm_left;
+volatile int16_t target_pwm_right;
 
 PID_STRUCT left_motor_pid_structrue = {0, 0, 0, 0, 0, 0};
 PID_STRUCT right_motor_pid_structrue = {0, 0, 0, 0, 0, 0};

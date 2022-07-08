@@ -1428,8 +1428,11 @@ void PID_Matrix4_val(float *PID_Matrix44)
      pwm_duty(ATOM1_CH6_P02_6,0);
      pwm_duty(ATOM1_CH7_P02_7,0);
  }
+#include "img_process.h"
+extern bool is_go;
  void controlBackward()
  {
+     is_go = false;
      speed_confor = 0;
      pwm_duty(ATOM1_CH4_P02_4,0);
      pwm_duty(ATOM1_CH5_P02_5,0);

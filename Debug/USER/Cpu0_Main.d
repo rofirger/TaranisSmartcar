@@ -12,3 +12,7 @@ Cpu0_Main.o :	../USER/fuzzy_pid.h
 ../USER/fuzzy_pid.h :
 Cpu0_Main.o :	../USER/TFT_GUI.h
 ../USER/TFT_GUI.h :
+Cpu0_Main.o :	../USER/control.h
+../USER/control.h :
+Cpu0_Main.o :	../USER/img_process.h
+../USER/img_process.h :

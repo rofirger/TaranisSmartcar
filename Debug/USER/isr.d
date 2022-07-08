@@ -12,3 +12,7 @@ isr.o :	../USER/img_process.h
 ../USER/img_process.h :
 isr.o :	../USER/fuzzy_pid.h
 ../USER/fuzzy_pid.h :
+isr.o :	../USER/control.h
+../USER/control.h :
+isr.o :	../USER/img_process.h
+../USER/img_process.h :

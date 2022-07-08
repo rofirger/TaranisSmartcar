@@ -23,6 +23,7 @@
 #include "Config.h"
 #include "fuzzy_pid.h"
 #include "TFT_GUI.h"
+#include "control.h"
 
 // 全局变量表
 uint8_t src_pixel_mat[MT9V03X_H][MT9V03X_W];
@@ -32,23 +33,17 @@ uint8_t left_line[MT9V03X_H];
 uint8_t mid_line[MT9V03X_H];
 uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
-int16_t LEFT_SPEED_BASE = 260;
-int16_t RIGHT_SPEED_BASE = 260;
+int16_t LEFT_SPEED_BASE = 290;
+int16_t RIGHT_SPEED_BASE = 290;
 
-int16_t left_speed = 260, right_speed = 260;
+volatile int16_t left_speed = 290, right_speed = 290;
 extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
-// 舵机PD
-PID pid_steer = {0.82, 0, 1.23};
-PosErr error_steer = {{0, 0, 0}, 0};
-int32_t steer_pwm = 625;
 bool is_right_out = false;
-// 电机PID
-PID pid_motor_left = {2.8, 3, 0};
-Error error_motor_left = {0, 0, 0};
-PID pid_motor_right = {2.8, 3, 0};
-Error error_motor_right = {0, 0, 0};
+int32_t steer_pwm = 625;
+extern int16_t left_encoder;
+extern int16_t right_encoder;
 // 电机
 uint32_t pwm_right = 2200;
 uint32_t pwm_left = 2200;
@@ -89,10 +84,13 @@ void Init ()
     //lcd_init();
     GUI_init(ERU_CH5_REQ1_P15_8);
     // 蓝牙初始化
-    uart_init(WIRELESS_UART, 57600, WIRELESS_UART_TX, WIRELESS_UART_RX);  //初始换串口
+    uart_init(UART_3, 576000, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
 
     // pit中断
     pit_interrupt_ms(CCU6_0, PIT_CH0, 20);
+
+    // esp spi初始化
+    spi_init(SPI_1, SPI1_SCLK_P10_2, SPI1_MOSI_P10_3, SPI1_MISO_P10_1, SPI1_CS9_P10_5, 3, 10 * 1000 * 1000);
 
     gpio_init(P20_13, GPO, 0, PUSHPULL);
 
@@ -119,14 +117,14 @@ void Blink ()
 
 void SendImg (uint8_t *_img, uint16_t _width, uint16_t _height)
 {
-    uart_putchar(WIRELESS_UART, 0x01);
-    uart_putchar(WIRELESS_UART, 0xfe);
-    uart_putbuff(WIRELESS_UART, _img, _width * _height);  //发送图像
-    uart_putchar(WIRELESS_UART, 0xfe);
-    uart_putchar(WIRELESS_UART, 0x01);
+    uart_putchar(UART_3, 0x01);
+    uart_putchar(UART_3, 0xfe);
+    uart_putbuff(UART_3, _img, _width * _height);  //发送图像
+    uart_putchar(UART_3, 0xfe);
+    uart_putchar(UART_3, 0x01);
 }
 
-bool is_go = true;
+volatile bool is_go = false;
 
 void Stop ()
 {
@@ -183,25 +181,23 @@ int core0_main (void)
                     src_pixel_mat[i][j] = mt9v03x_image[i][j];
                 }
             }
+            //if (location[0] == 3)
+            //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
             GetHistGram(MT9V03X_W, MT9V03X_H);
             thredshold = OTSUThreshold();
             BinaryzationProcess(MT9V03X_H, MT9V03X_W, thredshold);
             AuxiliaryProcess(MT9V03X_H, MT9V03X_W, thredshold, left_line, mid_line, right_line);
             UserProcess(left_line, mid_line, right_line, MT9V03X_H, MT9V03X_W, thredshold, &slope);
-            if (location[0] == 3)
+
+            if (location[0] == 2)
             {
-                for (int i = 0; i < MT9V03X_H; ++i)
-                {
-                    src_pixel_mat[i][left_line[i]] = 0;
-                    src_pixel_mat[i][mid_line[i]] = 0;
-                    src_pixel_mat[i][right_line[i]] = 0;
-                }
-                lcd_displayimage032((uint8_t*)src_pixel_mat, MT9V03X_W, MT9V03X_H);
-                lcd_showuint16(0, 7, road_type);
+                is_go = true;
             }
+            else
+                is_go = false;
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
-                slope = slope * 1.9;
+                slope = slope * 1.52;
             }
             if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
             {
@@ -211,13 +207,21 @@ int core0_main (void)
             {
                 slope -= 0.1;
             }
-            if (road_type == IN_LEFT_ROTARY || road_type == IN_RIGHT_ROTARY)
+            if (road_type == IN_LEFT_ROTARY)
             {
-                slope *= 1.13;
+                slope -= 0.12;
             }
-            if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN || road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+            if (road_type == IN_RIGHT_ROTARY)
             {
-                slope *= 1.15;
+                slope += 0.12;
+            }
+            if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN)
+            {
+                slope += 0.05;
+            }
+            if (road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+            {
+                slope -= 0.05;
             }
             Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
@@ -226,12 +230,12 @@ int core0_main (void)
                 steer_pwm = 700;
             else if (steer_pwm < 550)
                 steer_pwm = 550;
-
-            if (road_type != IN_CARBARN)
+            pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
+            if (road_type != IN_CARBARN && is_go)
             {
-                pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
-                left_speed = LEFT_SPEED_BASE - slope * 10;
-                right_speed = RIGHT_SPEED_BASE + slope * 10;
+
+                left_speed = LEFT_SPEED_BASE - slope * 13.5;
+                right_speed = RIGHT_SPEED_BASE + slope * 13.5;
                 //pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 110 );    // 右轮前进
                 //pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 110);    // 左轮前进
             }
@@ -244,14 +248,13 @@ int core0_main (void)
                 RIGHT_SPEED_BASE = 0;
                 left_speed = 0;
                 right_speed = 0;
-                pwm_duty(ATOM0_CH4_P02_4,0);
-                pwm_duty(ATOM0_CH5_P02_5,0);
-                pwm_duty(ATOM0_CH6_P02_6,0);
-                pwm_duty(ATOM0_CH7_P02_7,0);
+                //pwm_duty(ATOM0_CH4_P02_4,0);
+                //pwm_duty(ATOM0_CH5_P02_5,0);
+                //pwm_duty(ATOM0_CH6_P02_6,0);
+                //pwm_duty(ATOM0_CH7_P02_7,0);
             }
 
-            //lcd_showint16(0, 6, road_type);
-            if (road_type != NO_FIX_ROAD)
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
                 gpio_set(P33_10, 1);
             }
@@ -259,6 +262,23 @@ int core0_main (void)
             {
                 gpio_set(P33_10, 0);
             }
+
+            if (location[0] == 3)
+            {
+                for (int i = 0; i < MT9V03X_H; ++i)
+                {
+                    src_pixel_mat[i][left_line[i]] = 0;
+                    src_pixel_mat[i][mid_line[i]] = 0;
+                    src_pixel_mat[i][right_line[i]] = 0;
+                }
+                lcd_displayimage032((uint8_t*) src_pixel_mat, MT9V03X_W, MT9V03X_H);
+                lcd_showfloat(0, 6, slope, 3, 3);
+                lcd_showuint16(0, 7, road_type);
+                //uart_putbuff(UART_3, src_pixel_mat[0], MT9V03X_W * MT9V03X_H);
+
+                //spi_mosi(SPI_1, SPI1_CS9_P10_5, src_pixel_mat[0], NULL, 60 * 90, 1);
+            }
+
             mt9v03x_finish_flag = 0;
         }
     }
