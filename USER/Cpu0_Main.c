@@ -41,7 +41,7 @@ extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
 bool is_right_out = false;
-int32_t steer_pwm = 625;
+volatile int32_t steer_pwm = 625;
 extern int16_t left_encoder;
 extern int16_t right_encoder;
 // 电机
@@ -197,7 +197,7 @@ int core0_main (void)
                 is_go = false;
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
-                slope = slope * 1.52;
+                //slope = slope * 1.52;
             }
             if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
             {
@@ -234,8 +234,8 @@ int core0_main (void)
             if (road_type != IN_CARBARN && is_go)
             {
 
-                left_speed = LEFT_SPEED_BASE - slope * 14.5;
-                right_speed = RIGHT_SPEED_BASE + slope * 14.5;
+                left_speed = LEFT_SPEED_BASE - slope * 13.5;
+                right_speed = RIGHT_SPEED_BASE + slope * 13.5;
                 //pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 110 );    // 右轮前进
                 //pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 110);    // 左轮前进
             }
