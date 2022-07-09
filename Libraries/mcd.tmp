@@ -8,7 +8,7 @@ MCD Core Connection Info
     system:      Real HW
 MCD Core Connection Info
     host:        localhost
-    server_port: 50815
+    server_port: 53095
     system:      Real HW
     acc_hw:      DAS JDS TriBoard TC2XX V2.0 TB6TFSGK
     device_type: 0x201E8083
@@ -16,7 +16,7 @@ MCD Core Connection Info
     device_id:   0xE002926E
 MCD Core Connection Info
     host:        localhost
-    server_port: 50815
+    server_port: 53095
     system:      Real HW
     acc_hw:      DAS JDS TriBoard TC2XX V2.0 TB6TFSGK
     device_type: 0x201E8083
@@ -27,7 +27,7 @@ MCD Core Connection Info
     core_id:     0x00B7C002
 MCD Core Connection Info
     host:        localhost
-    server_port: 50815
+    server_port: 53095
     system:      Real HW
     acc_hw:      DAS JDS TriBoard TC2XX V2.0 TB6TFSGK
     device_type: 0x201E8083

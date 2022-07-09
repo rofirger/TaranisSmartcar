@@ -9,19 +9,19 @@
 #include "img_process.h"
 
 // 舵机PD
-PID pid_steer = {0.830, 0, 4.625};
+PID pid_steer = {0.830, 0, 4.125};
 PosErr error_steer = {{0, 0, 0}, 0};
 
 
 
 // 电机PID
-PID pid_motor_left = {3.8, 5, 0};
+PID pid_motor_left = {5.2, 7, 0};
 Error error_motor_left = {0, 0, 0};
-PID pid_motor_right = {3.8, 5, 0};
+PID pid_motor_right = {5.2, 7, 0};
 Error error_motor_right = {0, 0, 0};
 
 // 急转弯PID
-PID pid_sharp_bend = {0.0062, 0.0002, 0.0002};
+PID pid_sharp_bend = {0.0032, 0.00002, 0.00002};
 Error error_sharp_bend = {0, 0, 0};
 
 /*<!

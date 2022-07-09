@@ -1,22 +1,3 @@
-/*********************************************************************************************************************
- * COPYRIGHT NOTICE
- * Copyright (c) 2020,逐飞科技
- * All rights reserved.
- * 技术讨论QQ群：三群：824575535
- *
- * 以下所有内容版权均属逐飞科技所有，未经允许不得用于商业用途，
- * 欢迎各位使用并传播本程序，修改内容时必须保留逐飞科技的版权声明。
- *
- * @file       		main
- * @company	   		成都逐飞科技有限公司
- * @author     		逐飞科技(QQ3184284598)
- * @version    		查看doc内version文件 版本说明
- * @Software 		ADS v1.2.2
- * @Target core		TC264D
- * @Taobao   		https://seekfree.taobao.com/
- * @date       		2020-3-23
- ********************************************************************************************************************/
-
 #include "headfile.h"
 #pragma section all "cpu0_dsram"
 #include "img_process.h"
@@ -33,15 +14,15 @@ uint8_t left_line[MT9V03X_H];
 uint8_t mid_line[MT9V03X_H];
 uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
-int16_t LEFT_SPEED_BASE = 290;
-int16_t RIGHT_SPEED_BASE = 290;
+int16_t LEFT_SPEED_BASE = 320;
+int16_t RIGHT_SPEED_BASE = 320;
 
-volatile int16_t left_speed = 290, right_speed = 290;
+volatile int16_t left_speed = 320, right_speed = 320;
 extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
 bool is_right_out = false;
-volatile int32_t steer_pwm = 625;
+int32_t steer_pwm = 625;
 extern int16_t left_encoder;
 extern int16_t right_encoder;
 // 电机
@@ -195,9 +176,13 @@ int core0_main (void)
             }
             else
                 is_go = false;
-            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN)
             {
-                //slope = slope * 1.52;
+                slope += 0.5;
+            }
+            if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+            {
+                slope -= 0.5;
             }
             if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
             {
@@ -225,6 +210,7 @@ int core0_main (void)
             }
             //Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
+            error_steer.loc_sum = 0;
             steer_pwm = 625 + atan(slope) * 95;
             if (steer_pwm > 700)
                 steer_pwm = 700;
@@ -283,5 +269,3 @@ int core0_main (void)
         }
     }
 }
-
-#pragma section all restore
