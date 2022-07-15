@@ -14,10 +14,10 @@ uint8_t left_line[MT9V03X_H];
 uint8_t mid_line[MT9V03X_H];
 uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
-int16_t LEFT_SPEED_BASE = 320;
-int16_t RIGHT_SPEED_BASE = 320;
+int16_t LEFT_SPEED_BASE = 360;
+int16_t RIGHT_SPEED_BASE = 360;
 
-volatile int16_t left_speed = 320, right_speed = 320;
+volatile int16_t left_speed = 340, right_speed = 340;
 extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
@@ -26,8 +26,8 @@ int32_t steer_pwm = 625;
 extern int16_t left_encoder;
 extern int16_t right_encoder;
 // 电机
-uint32_t pwm_right = 2200;
-uint32_t pwm_left = 2200;
+uint32_t pwm_right = 2500;
+uint32_t pwm_left = 2500;
 // 直方图
 short hist_gram[256];
 // 是否暂停
@@ -65,10 +65,10 @@ void Init ()
     //lcd_init();
     GUI_init(ERU_CH5_REQ1_P15_8);
     // 蓝牙初始化
-    uart_init(UART_3, 576000, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
+    uart_init(UART_3, 115200, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
 
     // pit中断
-    pit_interrupt_ms(CCU6_0, PIT_CH0, 20);
+    //pit_interrupt_ms(CCU6_0, PIT_CH0, 20);
 
     // esp spi初始化
     spi_init(SPI_1, SPI1_SCLK_P10_2, SPI1_MOSI_P10_3, SPI1_MISO_P10_1, SPI1_CS9_P10_5, 3, 10 * 1000 * 1000);
@@ -106,7 +106,7 @@ void SendImg (uint8_t *_img, uint16_t _width, uint16_t _height)
 }
 
 volatile bool is_go = false;
-
+extern uint8_t _kind;
 void Stop ()
 {
     uint8_t num_black = 0;
@@ -194,11 +194,11 @@ int core0_main (void)
             }
             if (road_type == IN_LEFT_ROTARY)
             {
-                slope -= 0.12;
+                //slope -= 0.12;
             }
             if (road_type == IN_RIGHT_ROTARY)
             {
-                slope += 0.12;
+                //slope += 0.12;
             }
             if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN)
             {
@@ -217,13 +217,13 @@ int core0_main (void)
             else if (steer_pwm < 550)
                 steer_pwm = 550;
             pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
-            if (road_type != IN_CARBARN && is_go)
+            if (road_type != IN_CARBARN && is_go && _kind == 0)
             {
 
-                left_speed = LEFT_SPEED_BASE - slope * 13.5;
-                right_speed = RIGHT_SPEED_BASE + slope * 13.5;
-                //pwm_duty(ATOM0_CH4_P02_4, pwm_right + slope * 110 );    // 右轮前进
-                //pwm_duty(ATOM0_CH5_P02_5, pwm_left - slope * 110);    // 左轮前进
+                //left_speed = LEFT_SPEED_BASE - slope * 18.5;
+                //right_speed = RIGHT_SPEED_BASE + slope * 18.5;
+                pwm_duty(ATOM0_CH4_P02_4, pwm_right );    // 右轮前进
+                pwm_duty(ATOM0_CH5_P02_5, pwm_left);    // 左轮前进
             }
             else if (road_type == IN_CARBARN)
             {

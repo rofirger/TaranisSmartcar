@@ -9,15 +9,16 @@
 #include "img_process.h"
 
 // 舵机PD
-PID pid_steer = {0.830, 0, 4.125};
+PID pid_steer_standard =  {0.830, 0, 4.125};
+PID pid_steer = {0.90, 0, 4.125};
 PosErr error_steer = {{0, 0, 0}, 0};
 
 
 
 // 电机PID
-PID pid_motor_left = {5.2, 7, 0};
+PID pid_motor_left = {5.2, 2, 0};
 Error error_motor_left = {0, 0, 0};
-PID pid_motor_right = {5.2, 7, 0};
+PID pid_motor_right = {5.2, 2, 0};
 Error error_motor_right = {0, 0, 0};
 
 // 急转弯PID
@@ -61,4 +62,18 @@ float PID_Pos (PosErr *sptr, PID *pid, float now_point, float target_point)
     + pid->D * (sptr->err.currentError - sptr->err.lastError); // 微分D
     sptr->err.lastError = sptr->err.currentError;                     // 更新上次误差
     return pos_;
+}
+
+inline void SteerPidChange(float _p, float _i, float _d)
+{
+    pid_steer.P = _p;
+    pid_steer.I = _i;
+    pid_steer.D = _d;
+}
+
+inline void SteerPidReset()
+{
+    pid_steer.P = pid_steer_standard.P;
+    pid_steer.I = pid_steer_standard.I;
+    pid_steer.D = pid_steer_standard.D;
 }

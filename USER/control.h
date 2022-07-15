@@ -23,5 +23,6 @@ extern Error error_sharp_bend;
 
 float PID_Increase (Error *sptr, PID *pid, float nowPoint, float targetPoint);
 float PID_Pos (PosErr *sptr, PID *pid, float now_point, float target_point);
-
+void SteerPidChange(float _p, float _i, float _d);
+void SteerPidReset();
 #endif /* USER_CONTROL_H_ */

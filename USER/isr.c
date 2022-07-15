@@ -53,21 +53,49 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 	    target_pwm_right += PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
 	    //target_pwm_left += PID_Calc(&left_motor_pid_structrue, left_speed, left_encoder);
 	    //target_pwm_right += PID_Calc(&right_motor_pid_structrue, right_speed, right_encoder);
-
-	    if (target_pwm_left > 5000 || target_pwm_left < 0)
-	        target_pwm_left = 0;
-	    if (target_pwm_right > 5000 || target_pwm_right < 0)
-	        target_pwm_right = 0;
-	    pwm_duty(ATOM0_CH4_P02_4, target_pwm_right);    // 右轮前进
-	    pwm_duty(ATOM0_CH5_P02_5, target_pwm_left);    // 左轮前进
-	    if (target_pwm_left < 0)
+	    if (target_pwm_left >= 0)
 	    {
-	        pwm_duty(ATOM0_CH6_P02_6, -target_pwm_left);    // 左轮前进
+	        if (target_pwm_left > 9000)
+	        {
+	            target_pwm_left = 9000;
+	        }
+	        pwm_duty(ATOM0_CH5_P02_5, target_pwm_left);    // 左轮前进
+	        pwm_duty(ATOM0_CH6_P02_6, 0);    // 左轮后退
 	    }
-	    if (target_pwm_right < 0)
+	    else
 	    {
+	        pwm_duty(ATOM0_CH5_P02_5, 0);    // 左轮前进
+	        pwm_duty(ATOM0_CH6_P02_6, -target_pwm_left);    // 左轮后退
+	    }
+	    if (target_pwm_right >= 0)
+	    {
+	        if (target_pwm_right > 9000)
+	        {
+	            target_pwm_right = 9000;
+	        }
+	        pwm_duty(ATOM0_CH4_P02_4, target_pwm_right);    // 右轮前进
+	        pwm_duty(ATOM0_CH7_P02_7, 0);    // 右轮后退
+	    }
+	    else
+	    {
+	        pwm_duty(ATOM0_CH4_P02_4, 0);    // 右轮前进
 	        pwm_duty(ATOM0_CH7_P02_7, -target_pwm_right);    // 右轮后退
 	    }
+
+//	    if (target_pwm_left > 9000 || target_pwm_left < 0)
+//	        target_pwm_left = 0;
+//	    if (target_pwm_right > 9000 || target_pwm_right < 0)
+//	        target_pwm_right = 0;
+//
+//
+//	    if (target_pwm_left < 0)
+//	    {
+//	        pwm_duty(ATOM0_CH6_P02_6, -target_pwm_left);    // 左轮前进
+//	    }
+//	    if (target_pwm_right < 0)
+//	    {
+//	        pwm_duty(ATOM0_CH7_P02_7, -target_pwm_right);    // 右轮后退
+//	    }
 	}
 	//lcd_showint16(0, 4, left_encoder);
 	//lcd_showint16(0, 5, right_encoder);
