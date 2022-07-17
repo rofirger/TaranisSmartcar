@@ -52,8 +52,8 @@ void Init ()
     gpio_init(P21_2, GPO, 1, PUSHPULL);
     gtm_pwm_init(ATOM0_CH0_P21_2, 800, 10000);
     // 舵机PWM初始化
-    gtm_pwm_init(ATOM0_CH1_P33_9, 50, 625); // 550最右, 625中值, 700最左
-
+   // gtm_pwm_init(ATOM0_CH1_P33_9, 50, 625); // 550最右, 625中值, 700最左,旧车
+    gtm_pwm_init(ATOM0_CH1_P33_9, 80, 1160); // 1040最右, 1160中值, 1280最左,新车
     // 编码器初始化
     gpt12_init(GPT12_T2, GPT12_T2INB_P33_7, GPT12_T2EUDB_P33_6); // 左轮编码器， 正数为前进
     gpt12_init(GPT12_T4, GPT12_T4INA_P02_8, GPT12_T4EUDA_P00_9); // 右轮编码器， 负数为前进
@@ -62,10 +62,10 @@ void Init ()
     // 程序运行指示灯GPIO初始化
     gpio_init(P21_4, GPO, 0, PUSHPULL);
     // TFT初始化
-    //lcd_init();
-    GUI_init(ERU_CH5_REQ1_P15_8);
+    lcd_init();
+    //GUI_init(ERU_CH5_REQ1_P15_8);
     // 蓝牙初始化
-    uart_init(UART_3, 115200, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
+    uart_init(UART_3, 576000, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
 
     // pit中断
     //pit_interrupt_ms(CCU6_0, PIT_CH0, 20);
@@ -163,7 +163,7 @@ int core0_main (void)
                 }
             }
             //if (location[0] == 3)
-            //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
+                //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
             GetHistGram(MT9V03X_W, MT9V03X_H);
             thredshold = OTSUThreshold();
             BinaryzationProcess(MT9V03X_H, MT9V03X_W, thredshold);
@@ -211,12 +211,25 @@ int core0_main (void)
             //Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
             error_steer.loc_sum = 0;
+
+            // 旧版舵机
+            /*
             steer_pwm = 625 + atan(slope) * 95;
             if (steer_pwm > 700)
                 steer_pwm = 700;
             else if (steer_pwm < 550)
                 steer_pwm = 550;
             pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
+            */
+
+            // 新版舵机
+            steer_pwm = 1160 + atan(slope) * 140;
+            if (steer_pwm > 1280)
+                steer_pwm = 1280;
+            else if (steer_pwm < 1040)
+                steer_pwm = 1040;
+            gtm_pwm_init(ATOM0_CH1_P33_9, 80, steer_pwm); // 1040最右, 1160中值, 1280最左,新车
+
             if (road_type != IN_CARBARN && is_go && _kind == 0)
             {
 
@@ -229,7 +242,7 @@ int core0_main (void)
             {
                 //pwm_duty(ATOM0_CH1_P33_9, 700);      // 550最右, 625中值, 700最左
                 systick_delay_ms(STM0, 30);
-                pwm_duty(ATOM0_CH1_P33_9, 625);      // 550最右, 625中值, 700最左
+                gtm_pwm_init(ATOM0_CH1_P33_9, 80, 1160); // 1040最右, 1160中值, 1280最左,新车
                 LEFT_SPEED_BASE = 0;
                 RIGHT_SPEED_BASE = 0;
                 left_speed = 0;
@@ -240,16 +253,16 @@ int core0_main (void)
                 //pwm_duty(ATOM0_CH7_P02_7,0);
             }
 
-            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
-            {
-                gpio_set(P33_10, 1);
-            }
-            else
-            {
-                gpio_set(P33_10, 0);
-            }
+//            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+//            {
+//                gpio_set(P33_10, 1);
+//            }
+//            else
+//            {
+//                gpio_set(P33_10, 0);
+//            }
 
-            if (location[0] == 3)
+            //if (location[0] == 3)
             {
                 for (int i = 0; i < MT9V03X_H; ++i)
                 {
@@ -258,7 +271,7 @@ int core0_main (void)
                     src_pixel_mat[i][right_line[i]] = 0;
                 }
                 lcd_displayimage032((uint8_t*) src_pixel_mat, MT9V03X_W, MT9V03X_H);
-                lcd_showfloat(0, 6, slope, 3, 3);
+                //lcd_showfloat(0, 6, slope, 3, 3);
                 lcd_showuint16(0, 7, road_type);
                 //uart_putbuff(UART_3, src_pixel_mat[0], MT9V03X_W * MT9V03X_H);
 
