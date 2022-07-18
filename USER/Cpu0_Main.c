@@ -14,8 +14,8 @@ uint8_t left_line[MT9V03X_H];
 uint8_t mid_line[MT9V03X_H];
 uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
-int16_t LEFT_SPEED_BASE = 360;
-int16_t RIGHT_SPEED_BASE = 360;
+int16_t LEFT_SPEED_BASE = 290;
+int16_t RIGHT_SPEED_BASE = 290;
 
 volatile int16_t left_speed = 340, right_speed = 340;
 extern RoadType road_type;
@@ -26,8 +26,8 @@ int32_t steer_pwm = 625;
 extern int16_t left_encoder;
 extern int16_t right_encoder;
 // 电机
-uint32_t pwm_right = 2500;
-uint32_t pwm_left = 2500;
+uint32_t pwm_right = 2000;
+uint32_t pwm_left = 2000;
 // 直方图
 short hist_gram[256];
 // 是否暂停
@@ -62,8 +62,8 @@ void Init ()
     // 程序运行指示灯GPIO初始化
     gpio_init(P21_4, GPO, 0, PUSHPULL);
     // TFT初始化
-    lcd_init();
-    //GUI_init(ERU_CH5_REQ1_P15_8);
+    //lcd_init();
+    GUI_init(ERU_CH5_REQ1_P15_8);
     // 蓝牙初始化
     uart_init(UART_3, 576000, UART3_TX_P21_7, UART3_RX_P21_6);  //初始换串口
 
@@ -176,38 +176,38 @@ int core0_main (void)
             }
             else
                 is_go = false;
-            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN)
-            {
-                slope += 0.5;
-            }
-            if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
-            {
-                slope -= 0.5;
-            }
-            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                slope += 0.1;
-            }
-            if (road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                slope -= 0.1;
-            }
-            if (road_type == IN_LEFT_ROTARY)
-            {
-                //slope -= 0.12;
-            }
-            if (road_type == IN_RIGHT_ROTARY)
-            {
-                //slope += 0.12;
-            }
-            if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN)
-            {
-                slope += 0.05;
-            }
-            if (road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
-            {
-                slope -= 0.05;
-            }
+//            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN)
+//            {
+//                slope += 0.5;
+//            }
+//            if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+//            {
+//                slope -= 0.5;
+//            }
+//            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
+//            {
+//                slope += 0.1;
+//            }
+//            if (road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
+//            {
+//                slope -= 0.1;
+//            }
+//            if (road_type == IN_LEFT_ROTARY)
+//            {
+//                //slope -= 0.12;
+//            }
+//            if (road_type == IN_RIGHT_ROTARY)
+//            {
+//                //slope += 0.12;
+//            }
+//            if (road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN)
+//            {
+//                slope += 0.05;
+//            }
+//            if (road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+//            {
+//                slope -= 0.05;
+//            }
             //Stop();
             slope = PID_Pos(&error_steer, &pid_steer, 0, slope);
             error_steer.loc_sum = 0;
@@ -230,12 +230,12 @@ int core0_main (void)
                 steer_pwm = 1040;
             gtm_pwm_init(ATOM0_CH1_P33_9, 80, steer_pwm); // 1040最右, 1160中值, 1280最左,新车
 
-            if (road_type != IN_CARBARN && is_go && _kind == 0)
+            if (road_type != IN_CARBARN && is_go)
             {
 
                 //left_speed = LEFT_SPEED_BASE - slope * 18.5;
                 //right_speed = RIGHT_SPEED_BASE + slope * 18.5;
-                pwm_duty(ATOM0_CH4_P02_4, pwm_right );    // 右轮前进
+                pwm_duty(ATOM0_CH4_P02_4, pwm_right);    // 右轮前进
                 pwm_duty(ATOM0_CH5_P02_5, pwm_left);    // 左轮前进
             }
             else if (road_type == IN_CARBARN)
@@ -262,8 +262,8 @@ int core0_main (void)
 //                gpio_set(P33_10, 0);
 //            }
 
-            //if (location[0] == 3)
-            {
+//            if (location[0] == 3)
+//            {
                 for (int i = 0; i < MT9V03X_H; ++i)
                 {
                     src_pixel_mat[i][left_line[i]] = 0;
@@ -276,7 +276,7 @@ int core0_main (void)
                 //uart_putbuff(UART_3, src_pixel_mat[0], MT9V03X_W * MT9V03X_H);
 
                 //spi_mosi(SPI_1, SPI1_CS9_P10_5, src_pixel_mat[0], NULL, 60 * 90, 1);
-            }
+            //}
 
             mt9v03x_finish_flag = 0;
         }

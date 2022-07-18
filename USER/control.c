@@ -9,8 +9,8 @@
 #include "img_process.h"
 
 // ¶æ»úPD
-PID pid_steer_standard =  {0.830, 0, 1.125};
-PID pid_steer = {0.850, 0, 4.125};
+PID pid_steer_standard =  {0.970, 0, 0.125};
+PID pid_steer = {0.970, 0, 0.125};
 PosErr error_steer = {{0, 0, 0}, 0};
 
 
