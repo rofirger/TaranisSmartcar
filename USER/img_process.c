@@ -31,9 +31,9 @@ void BinaryzationProcess(int rows, int cols, unsigned int threshold_value)
     for (int i = 0; i < rows; ++i)
     {
         if (i < rows / 3)
-            _tmp_val = threshold_value + 10;
+            _tmp_val = threshold_value + 16;
         if (i > rows / 3 && i < 2 * rows / 3)
-            _tmp_val = threshold_value + 6;
+            _tmp_val = threshold_value + 8;
         if (i > 2 * rows / 3)
             _tmp_val = threshold_value;
         if (_tmp_val > 255)
@@ -122,20 +122,20 @@ unsigned char **AuxiliaryProcess(unsigned char **src_pixel_mat, size_t src_rows,
     uint8_t mid_point = src_cols >> 1;
     uint8_t left_right_miss_point = 0;
     int16_t min_dist = src_cols;
+    if (src_pixel_mat[src_rows - 1][mid_point] < threshold_val)
+    {
+        // 重新寻找扫线中点
+        for (int16_t j = mid_point - 40; j < mid_point + 40; j++)
+        {
+            if (src_pixel_mat[src_rows - 1][j] > threshold_val)
+            {
+                mid_point = j;
+            }
+        }
+    }
 #endif // LOWER_COMPUTER
     for (int i = src_rows - 1; i >= 0; --i)
     {
-        if (src_pixel_mat[src_rows - 1][mid_point] < threshold_val)
-        {
-            // 重新寻找扫线中点
-            for (int16_t j = mid_point - 40; j < mid_point + 40; j++)
-            {
-                if (src_pixel_mat[src_rows - 1][j] > threshold_val)
-                {
-                    mid_point = j;
-                }
-            }
-        }
 
 #ifdef UPPER_COMPUTER
         size_t cur_point = mid_point;
@@ -1682,6 +1682,56 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
     }
 
     end_src_rows = 0;
+
+    // 处理补线点，查看是否符合
+    Pos _min_right_line = {src_cols - 1, src_rows - 3};
+    Pos _max_left_line = {0, src_rows - 3};
+    if (fix_left_head.pos_col != NO_DEFINE_VALUE && fix_left_tail.pos_col != NO_DEFINE_VALUE)
+    {
+        for (int16_t _j = fix_left_tail.pos_col; _j < src_rows - 2; ++_j)
+        {
+            if (_min_right_line.x > right_line[_j])
+            {
+                _min_right_line.x = right_line[_j];
+                _min_right_line.y = _j;
+            }
+        }
+
+        float k = (float)((int16_t)left_line[fix_left_head.pos_col] - (int16_t)left_line[fix_left_tail.pos_col]) /
+                  (float)(fix_left_head.pos_col - fix_left_tail.pos_col);
+        float b = left_line[fix_left_head.pos_col] - k * fix_left_head.pos_col;
+        int16_t _tmp_x = k * _min_right_line.y + b;
+        if (_tmp_x + 5 > _min_right_line.x)
+        {
+            fix_left_head.pos_col = NO_DEFINE_VALUE;
+            fix_left_head.fix_point_type = NO_TYPE;
+            fix_left_tail.pos_col = NO_DEFINE_VALUE;
+            fix_left_tail.fix_point_type = NO_TYPE;
+        }
+    }
+    if (fix_right_head.pos_col != NO_DEFINE_VALUE && fix_right_tail.pos_col != NO_DEFINE_VALUE)
+    {
+        for (int16_t _j = fix_right_tail.pos_col; _j < src_rows - 2; ++_j)
+        {
+            if (_max_left_line.x < left_line[_j])
+            {
+                _max_left_line.x = left_line[_j];
+                _max_left_line.y = _j;
+            }
+        }
+        float k = (float)((int16_t)right_line[fix_right_head.pos_col] - (int16_t)right_line[fix_right_tail.pos_col]) /
+                  (float)(fix_right_head.pos_col - fix_right_tail.pos_col);
+        float b = right_line[fix_right_head.pos_col] - k * fix_right_head.pos_col;
+        int16_t _tmp_x = k * _max_left_line.y + b;
+        if (_tmp_x - 5 < _max_left_line.x)
+        {
+            fix_right_head.fix_point_type = NO_TYPE;
+            fix_left_head.pos_col = NO_DEFINE_VALUE;
+            fix_right_tail.fix_point_type = NO_TYPE;
+            fix_right_tail.pos_col = NO_DEFINE_VALUE;
+        }
+    }
+
     if (road_type == NO_FIX_ROAD ||
         road_type == ONLY_FIX_LEFT_ROAD ||
         road_type == ONLY_FIX_RIGHT_ROAD)
@@ -1781,9 +1831,9 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
 
         // 左环道检测入口
         uint8_t right_line_begin_ = src_rows - 1;
-        for (int i_find_right_line_begin_ = src_rows - 1; i_find_right_line_begin_ >= 0; --i_find_right_line_begin_)
+        for (int i_find_right_line_begin_ = src_rows - 1; i_find_right_line_begin_ >= 1; --i_find_right_line_begin_)
         {
-            if (right_line[i_find_right_line_begin_] != src_cols - 1)
+            if (right_line[i_find_right_line_begin_] != src_cols - 1 && right_line[i_find_right_line_begin_ - 1] != src_cols - 1)
             {
                 right_line_begin_ = i_find_right_line_begin_;
                 break;
@@ -1892,10 +1942,10 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         if (_left_right_line_normal_flag == 1)
                         {
                             _left_line_fit = LinearRegress(left_line, _max_left_line_y, src_rows - 1);
-                            _left_line_offset_cliff = ABS((_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
+                            _left_line_offset_cliff = (_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x;
                         }
                         StraightLineCoeffic _right_line_fit = LinearRegress(right_line, _min_right_line_y, src_rows - 1);
-                        int16_t _right_line_offset_cliff = ABS((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
+                        int16_t _right_line_offset_cliff = (_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x;
 
                         // 拟合中线
                         int16_t _mid_line_start_fit;
@@ -1919,14 +1969,13 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         }
                         StraightLineCoeffic _mid_line_fit = LinearRegress(_tmp_mid_line, _mid_line_start_fit,
                                                                           src_rows - 1);
-                        int16_t _mid_line_offset_cliff = ABS(
-                            (_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
+                        int16_t _mid_line_offset_cliff = (_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x;
 
-                        if ((_left_right_line_normal_flag == 1 &&
-                             _mid_line_offset_cliff + 2 < _left_line_offset_cliff &&
-                             _mid_line_offset_cliff + 2 < _right_line_offset_cliff) ||
-                            (_left_right_line_normal_flag == 3 &&
-                             _mid_line_offset_cliff + 2 < _right_line_offset_cliff))
+                        if ((_left_right_line_normal_flag == 1 && _left_line_offset_cliff < 0 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff) &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)) ||
+                            (_left_right_line_normal_flag == 3 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)))
                         {
                             uint8_t i_cliff = _max_cliff_y;
                             bool _is_meet_white = true;
@@ -1959,7 +2008,7 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                                 bool _is_exit_large_offset = false;
                                 for (int16_t _j = fix_left_tail.pos_col; _j < src_rows - 1; ++_j)
                                 {
-                                    if (right_consecutive_point_offset[_j] > 9)
+                                    if (right_consecutive_point_offset[_j] > 5)
                                     {
                                         _is_exit_large_offset = true;
                                         break;
@@ -1995,21 +2044,23 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
         if (end_src_rows < 3)
         {
             // 2022年5月26日
-            uint8_t num_err = 0;
-            StraightLineCoeffic straight_line_coeffic = LinearRegress(right_line, end_src_rows + 1,
-                                                                      right_line_begin_);
-            int16_t n = end_src_rows + 1;
-            for (n; n < right_line_begin_; ++n)
-            {
-                if (ABS(right_line[n] - (straight_line_coeffic.k * n + straight_line_coeffic.a)) > 5)
-                {
-                    num_err++;
-                }
-            }
             road_type = NO_FIX_ROAD;
-            if (num_err < 4 && fix_left_head.fix_point_type == CLIFF && fix_left_tail.fix_point_type == ARC_LEFT)
+            if (right_line_begin_ > (int16_t)(src_rows * 3 / 4.0))
             {
-                road_type = LEFT_ROTARY_IN_FIRST_SUNKEN;
+                uint8_t num_err = 0;
+                StraightLineCoeffic straight_line_coeffic = LinearRegress(right_line, end_src_rows + 1, right_line_begin_);
+                int16_t n = end_src_rows + 1;
+                for (n; n < right_line_begin_; ++n)
+                {
+                    if (ABS(right_line[n] - (straight_line_coeffic.k * n + straight_line_coeffic.a)) > 5)
+                    {
+                        num_err++;
+                    }
+                }
+                if (num_err < 4 && fix_left_head.fix_point_type == CLIFF && fix_left_tail.fix_point_type == ARC_LEFT)
+                {
+                    road_type = LEFT_ROTARY_IN_FIRST_SUNKEN;
+                }
             }
         }
         // 左环道检测出口
@@ -2027,9 +2078,9 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
 
         // 右环道检测入口
         uint8_t left_line_begin_ = src_rows - 1;
-        for (int i_find_left_line_begin_ = src_rows - 1; i_find_left_line_begin_ >= 0; --i_find_left_line_begin_)
+        for (int i_find_left_line_begin_ = src_rows - 1; i_find_left_line_begin_ >= 1; --i_find_left_line_begin_)
         {
-            if (left_line[i_find_left_line_begin_] != 0)
+            if (left_line[i_find_left_line_begin_] != 0 && left_line[i_find_left_line_begin_ - 1] != 0)
             {
                 left_line_begin_ = i_find_left_line_begin_;
                 break;
@@ -2131,10 +2182,10 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         if (_left_right_line_normal_flag == 1)
                         {
                             _right_line_fit = LinearRegress(right_line, _min_right_line_y, src_rows - 1);
-                            _right_line_offset_cliff = ABS((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
+                            _right_line_offset_cliff = ((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
                         }
                         StraightLineCoeffic _left_line_fit = LinearRegress(left_line, _max_left_line_y, src_rows - 1);
-                        int16_t _left_line_offset_cliff = ABS((_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
+                        int16_t _left_line_offset_cliff = ((_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
                         // 拟合中线
                         int16_t _mid_line_start_fit;
                         if (_left_right_line_normal_flag == 1)
@@ -2156,10 +2207,13 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                             }
                         }
                         StraightLineCoeffic _mid_line_fit = LinearRegress(_tmp_mid_line, _mid_line_start_fit, src_rows - 1);
-                        int16_t _mid_line_offset_cliff = ABS((_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
+                        int16_t _mid_line_offset_cliff = ((_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
 
-                        if ((_left_right_line_normal_flag == 1 && _mid_line_offset_cliff + 2 < _left_line_offset_cliff && _mid_line_offset_cliff + 2 < _right_line_offset_cliff) ||
-                            (_left_right_line_normal_flag == 2 && _mid_line_offset_cliff + 2 < _left_line_offset_cliff))
+                        if ((_left_right_line_normal_flag == 1 && _left_line_offset_cliff < 0 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff) &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)) ||
+                            (_left_right_line_normal_flag == 2 && _left_line_offset_cliff < 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff)))
                         {
                             uint8_t i_cliff = _max_cliff_y;
                             bool _is_meet_white = true;
@@ -2192,7 +2246,7 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                                 bool _is_exit_large_offset = false;
                                 for (int16_t _j = fix_right_tail.pos_col; _j < src_rows - 1; ++_j)
                                 {
-                                    if (left_consecutive_point_offset[_j] > 9)
+                                    if (left_consecutive_point_offset[_j] > 5)
                                     {
                                         _is_exit_large_offset = true;
                                     }
@@ -2226,21 +2280,24 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
         if (end_src_rows < 3)
         {
             // 2022年5月26日
-            uint8_t num_err = 0;
-            StraightLineCoeffic straight_line_coeffic = LinearRegress(left_line, end_src_rows + 1,
-                                                                      left_line_begin_);
-            uint8_t n = end_src_rows + 1;
-            for (n; n < left_line_begin_; ++n)
-            {
-                if (ABS(left_line[n] - (straight_line_coeffic.k * n + straight_line_coeffic.a)) > 3)
-                {
-                    num_err++;
-                }
-            }
             road_type = NO_FIX_ROAD;
-            if (num_err < 4 && fix_right_head.fix_point_type == CLIFF && fix_right_tail.fix_point_type == ARC_RIGHT)
+            if (left_line_begin_ > (int16_t)(src_rows * 3 / 4.0))
             {
-                road_type = RIGHT_ROTARY_IN_FIRST_SUNKEN;
+                uint8_t num_err = 0;
+                StraightLineCoeffic straight_line_coeffic = LinearRegress(left_line, end_src_rows + 1,
+                                                                          left_line_begin_);
+                uint8_t n = end_src_rows + 1;
+                for (n; n < left_line_begin_; ++n)
+                {
+                    if (ABS(left_line[n] - (straight_line_coeffic.k * n + straight_line_coeffic.a)) > 3)
+                    {
+                        num_err++;
+                    }
+                }
+                if (num_err < 4 && fix_right_head.fix_point_type == CLIFF && fix_right_tail.fix_point_type == ARC_RIGHT)
+                {
+                    road_type = RIGHT_ROTARY_IN_FIRST_SUNKEN;
+                }
             }
         }
         // 右环道检测出口
@@ -2349,12 +2406,11 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         if (_left_right_line_normal_flag == 1)
                         {
                             _left_line_fit = LinearRegress(left_line, _max_left_line_y, src_rows - 1);
-                            _left_line_offset_cliff = ABS(
-                                (_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
+                            _left_line_offset_cliff = (_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x;
                         }
                         StraightLineCoeffic _right_line_fit = LinearRegress(right_line, _min_right_line_y,
                                                                             src_rows - 1);
-                        int16_t _right_line_offset_cliff = ABS((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
+                        int16_t _right_line_offset_cliff = ((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
 
                         // 拟合中线
                         int16_t _mid_line_start_fit;
@@ -2378,11 +2434,13 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         }
                         StraightLineCoeffic _mid_line_fit = LinearRegress(_tmp_mid_line, _mid_line_start_fit,
                                                                           src_rows - 1);
-                        int16_t _mid_line_offset_cliff = ABS(
-                            (_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
+                        int16_t _mid_line_offset_cliff = (_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x;
 
-                        if ((_left_right_line_normal_flag == 1 && _mid_line_offset_cliff + 2 < _left_line_offset_cliff && _mid_line_offset_cliff + 2 < _right_line_offset_cliff) ||
-                            (_left_right_line_normal_flag == 3 && _mid_line_offset_cliff + 2 < _right_line_offset_cliff))
+                        if ((_left_right_line_normal_flag == 1 && _left_line_offset_cliff < 0 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff) &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)) ||
+                            (_left_right_line_normal_flag == 3 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)))
                         {
                             uint8_t i_cliff = _max_cliff_y;
                             bool _is_meet_white = true;
@@ -2574,10 +2632,10 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                         if (_left_right_line_normal_flag == 1)
                         {
                             _right_line_fit = LinearRegress(right_line, _min_right_line_y, src_rows - 1);
-                            _right_line_offset_cliff = ABS((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
+                            _right_line_offset_cliff = ((_right_line_fit.k * _max_cliff_y + _right_line_fit.a) - _max_cliff_x);
                         }
                         StraightLineCoeffic _left_line_fit = LinearRegress(left_line, _max_left_line_y, src_rows - 1);
-                        int16_t _left_line_offset_cliff = ABS((_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
+                        int16_t _left_line_offset_cliff = ((_left_line_fit.k * _max_cliff_y + _left_line_fit.a) - _max_cliff_x);
                         // 拟合中线
                         int16_t _mid_line_start_fit;
                         if (_left_right_line_normal_flag == 1)
@@ -2599,10 +2657,13 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                             }
                         }
                         StraightLineCoeffic _mid_line_fit = LinearRegress(_tmp_mid_line, _mid_line_start_fit, src_rows - 1);
-                        int16_t _mid_line_offset_cliff = ABS((_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
+                        int16_t _mid_line_offset_cliff = ((_mid_line_fit.k * _max_cliff_y + _mid_line_fit.a) - _max_cliff_x);
 
-                        if ((_left_right_line_normal_flag == 1 && _mid_line_offset_cliff + 2 < _left_line_offset_cliff && _mid_line_offset_cliff + 2 < _right_line_offset_cliff) ||
-                            (_left_right_line_normal_flag == 2 && _mid_line_offset_cliff + 2 < _left_line_offset_cliff))
+                        if ((_left_right_line_normal_flag == 1 && _left_line_offset_cliff < 0 && _right_line_offset_cliff > 0 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff) &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_right_line_offset_cliff)) ||
+                            (_left_right_line_normal_flag == 2 &&
+                             ABS(_mid_line_offset_cliff) + 2 < ABS(_left_line_offset_cliff)))
                         {
                             uint8_t i_cliff = _max_cliff_y;
                             bool _is_meet_white = true;
@@ -2796,9 +2857,33 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
                 fix_left_tail.pos_col = NO_DEFINE_VALUE;
                 fix_left_head.pos_col = NO_DEFINE_VALUE;
             }
-            else if (fix_left_head.fix_point_type == ARC_LEFT && fix_left_tail.fix_point_type == CLIFF && fix_left_tail.pos_col > 3)
+            else if (fix_left_head.fix_point_type == ARC_LEFT && fix_left_tail.fix_point_type == CLIFF && fix_left_tail.pos_col > 6)
             {
-                road_type = LEFT_ROTARY_IN_SECOND_SUNKEN;
+                // 往摄像头方向找最大的落差(负值，绝对值最大)
+                Pos _min_offset = {.x = left_consecutive_point_offset[fix_left_tail.pos_col], .y = fix_left_tail.pos_col};
+                for (int16_t _i = fix_left_tail.pos_col; _i < src_rows - 1 && left_consecutive_point_offset[_i] <= 0; ++_i)
+                {
+                    if (left_consecutive_point_offset[_i] < _min_offset.x)
+                    {
+                        _min_offset.x = left_consecutive_point_offset[_i];
+                        _min_offset.y = _i;
+                    }
+                }
+                int16_t _num_have_white = 0;
+                for (int16_t _j = fix_left_tail.pos_col; _j <= _min_offset.y; ++_j)
+                {
+                    for (int16_t _k = left_line[_j]; _k >= 2; --_k)
+                    {
+                        if (src_pixel_mat[_j][_k] > threshold_val &&
+                            src_pixel_mat[_j][_k - 1] > threshold_val &&
+                            src_pixel_mat[_j][_k - 2] > threshold_val)
+                        {
+                            _num_have_white++;
+                        }
+                    }
+                }
+                if (_num_have_white < 3)
+                    road_type = LEFT_ROTARY_IN_SECOND_SUNKEN;
             }
         }
         break;
@@ -2992,7 +3077,31 @@ void FixRoad(unsigned char **src_pixel_mat, std::string &output, size_t *left_li
             }
             else if (fix_right_head.fix_point_type == ARC_RIGHT && fix_right_tail.fix_point_type == CLIFF && fix_right_tail.pos_col > 6)
             {
-                road_type = RIGHT_ROTARY_IN_SECOND_SUNKEN;
+                // 往摄像头方向找最大的落差(正值，绝对值最大)
+                Pos _max_offset = {.x = right_consecutive_point_offset[fix_right_tail.pos_col], .y = fix_right_tail.pos_col};
+                for (int16_t _i = fix_right_tail.pos_col; _i < src_rows - 1 && right_consecutive_point_offset[_i] <= 0; ++_i)
+                {
+                    if (right_consecutive_point_offset[_i] > _max_offset.x)
+                    {
+                        _max_offset.x = right_consecutive_point_offset[_i];
+                        _max_offset.y = _i;
+                    }
+                }
+                int16_t _num_have_white = 0;
+                for (int16_t _j = fix_right_tail.pos_col; _j <= _max_offset.y; ++_j)
+                {
+                    for (int16_t _k = right_line[_j]; _k < src_cols - 2; ++_k)
+                    {
+                        if (src_pixel_mat[_j][_k] > threshold_val &&
+                            src_pixel_mat[_j][_k + 1] > threshold_val &&
+                            src_pixel_mat[_j][_k + 2] > threshold_val)
+                        {
+                            _num_have_white++;
+                        }
+                    }
+                }
+                if (_num_have_white < 3)
+                    road_type = RIGHT_ROTARY_IN_SECOND_SUNKEN;
             }
         }
         break;
@@ -3254,7 +3363,7 @@ UserProcessRet UserProcess(unsigned char **src_pixel_mat, size_t src_rows, size_
                            double *slope)
 #endif // UPPER_COMPUTER
 #ifdef LOWER_COMPUTER
-    void UserProcess(uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, uint8 src_rows, uint8_t src_cols,
+    void UserProcess(uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, uint8_t src_rows, uint8_t src_cols,
                      uint8_t threshold_value, float *slope)
 #endif // LOWER_COMPUTER
 {
@@ -3385,7 +3494,9 @@ UserProcessRet UserProcess(unsigned char **src_pixel_mat, size_t src_rows, size_
         // float curve = CurvatureCal(mid_line, quadratic_start_index, quadratic_end_index);
         // 急转弯识别
         _kind = 0;
-        if (road_type_for_control == NO_FIX_ROAD && end_src_rows > 3 && ABS(right_line[end_src_rows] - (int16_t)left_line[end_src_rows]) < 3 &&
+        if ((road_type_for_control == NO_FIX_ROAD || road_type_for_control == IN_LEFT_ROTARY || road_type_for_control == IN_RIGHT_ROTARY) &&
+            end_src_rows > 3 &&
+            ABS(right_line[end_src_rows] - (int16_t)left_line[end_src_rows]) < 3 &&
             ABS(right_line[end_src_rows - 1] - (int16_t)left_line[end_src_rows - 1]) < 3 &&
             ABS(right_line[end_src_rows - 2] - (int16_t)left_line[end_src_rows - 2]) < 3)
         {
@@ -3505,9 +3616,9 @@ UserProcessRet UserProcess(unsigned char **src_pixel_mat, size_t src_rows, size_
                 }
             }
         }
-        //        lcd_showint16(0, 5, end_src_rows);
-        //        lcd_showint16(50, 5, _kind);
-        // 透视变换中线
+        // lcd_showint16(0, 5, end_src_rows);
+        // lcd_showint16(50, 5, _kind);
+        //  透视变换中线
         for (uint8_t i = 0; i < src_rows; ++i)
         {
             float x, y, w;
@@ -3552,20 +3663,6 @@ UserProcessRet UserProcess(unsigned char **src_pixel_mat, size_t src_rows, size_
 
         curve = 1.9 * curve * curve * curve / 3 + 0.9 * curve / 3.0;
         curve += (offset / (float)((mid_line_perspective_transform[(cur_cal_start_point)].y - mid_line_perspective_transform[(cur_cal_end_point)].y) * (mid_line_perspective_transform[(cur_cal_start_point)].y - mid_line_perspective_transform[(cur_cal_end_point)].y))) / 4.4;
-        // 提前入弯
-        //        uint8_t _zero_line = end_src_rows;
-        //        uint8_t _line_kind = 0;             // 1是左线，2是右线
-        //        for (int16_t _i = end_src_rows; _i < src_rows; ++_i)
-        //        {
-        //            if (_line_kind == 0)
-        //            {
-        //                if (left_line[_i] == 0)
-        //                    _zero_line = _i;
-        //                else if (right_line[_i] == src_cols - 1)
-        //                    _zero_line = _i;
-        //                else
-        //            }
-        //        }
 
         // 检测是否缺线, 右正，左负
         int16_t no_line = 0;
