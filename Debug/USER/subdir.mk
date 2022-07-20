@@ -7,8 +7,10 @@ C_SRCS += \
 ../USER/Balance.c \
 ../USER/Cpu0_Main.c \
 ../USER/Cpu1_Main.c \
+../USER/Host_Computer.c \
 ../USER/TFT_GUI.c \
 ../USER/control.c \
+../USER/debug.c \
 ../USER/fuzzy_pid.c \
 ../USER/img_process.c \
 ../USER/isr.c 
@@ -17,8 +19,10 @@ OBJS += \
 ./USER/Balance.o \
 ./USER/Cpu0_Main.o \
 ./USER/Cpu1_Main.o \
+./USER/Host_Computer.o \
 ./USER/TFT_GUI.o \
 ./USER/control.o \
+./USER/debug.o \
 ./USER/fuzzy_pid.o \
 ./USER/img_process.o \
 ./USER/isr.o 
@@ -27,8 +31,10 @@ COMPILED_SRCS += \
 ./USER/Balance.src \
 ./USER/Cpu0_Main.src \
 ./USER/Cpu1_Main.src \
+./USER/Host_Computer.src \
 ./USER/TFT_GUI.src \
 ./USER/control.src \
+./USER/debug.src \
 ./USER/fuzzy_pid.src \
 ./USER/img_process.src \
 ./USER/isr.src 
@@ -37,8 +43,10 @@ C_DEPS += \
 ./USER/Balance.d \
 ./USER/Cpu0_Main.d \
 ./USER/Cpu1_Main.d \
+./USER/Host_Computer.d \
 ./USER/TFT_GUI.d \
 ./USER/control.d \
+./USER/debug.d \
 ./USER/fuzzy_pid.d \
 ./USER/img_process.d \
 ./USER/isr.d 

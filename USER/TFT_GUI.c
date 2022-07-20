@@ -27,6 +27,8 @@
 //#include "pid.h"
 //#include "Balance.h"
 #include "zf_ccu6_pit.h"
+#include "control.h"
+#include "img_process.h"
 static ERU_PIN_enum TFT_Pin;
 //data用来存参数，每次调用page1ParaSave时会对data进行刷新
 double paraData[TotalParaNumber];
@@ -57,10 +59,45 @@ static uint8 controlFlag = 0;
 static uint8 settingBit = 0;
 uint8 wifiInitOK=0;
 
+extern int sp_kl;
+extern int sp_kh;
+extern int sp_n;
+extern int pwm_TFT;
+extern PID pid_motor_right_temp;
+extern PID pid_motor_left_temp;
+extern int steer_cha;
+extern int _kind_sum_aim;
+extern int _kind_sum_end;
+extern int steer_cha2;
 
+extern float huandao;
+extern int juli;
+extern int juli_temp;
+extern int xianfu;
+extern int _kind_sum_sp;
+extern PID pid_steer_temp;
+extern PID pid_steer_new;
+extern int juli_jizhuan;
 uint8 PID_Matrix1[7][7],PID_Matrix2[7][7],PID_Matrix3[7][7];
 float PID_Matrix4[3][4];
-
+int _kind_sum_aim2;
+extern float sp_cha_kL;
+extern float sp_cha_kL2;
+extern float sp_cha_kR;
+extern float sp_cha_kR2;
+extern float start_sum_aim;
+extern int sancha_sum_aim;
+extern PID pid_motor_rightn;
+extern PID pid_motor_leftn;
+extern int jiansu;
+extern int _kind_end_sum_aim;
+extern int jiansu2;
+extern float piancha;
+extern int yuzhi;
+extern int inrot_jiansu;
+extern float mid_jiansu_k;
+extern int ruhuan_pwm;
+float piancha_temp;
 //初始化TFT屏幕
 void GUI_init (ERU_PIN_enum eru_pin)
 {
@@ -908,47 +945,47 @@ void page_init ()
     str_cpy(page0[2], "Control Mode", 12);
     str_cpy(page0[3], "Inductor Test", 13);
     str_cpy(page1[0], "Return || Page 1", 16);        //paraXX中的XX是数组索引，paraData[XX]
-    str_cpy(page1[1], "line_1:", 7);
-    str_cpy(page1[2], "line_2:", 7);
-    str_cpy(page1[3], "line_3:", 7);
-    str_cpy(page1[4], "line_4:", 7);
-    str_cpy(page1[5], "line_5:", 7);
-    str_cpy(page1[6], "line_6:", 7);
-    str_cpy(page1[7], "line_7:", 7);
-    str_cpy(page1[8], "**4_P1:", 7);
-    str_cpy(page1[9], "**4_P2:", 7);
+    str_cpy(page1[1], "P*****:", 7);
+    str_cpy(page1[2], "D*****:", 7);
+    str_cpy(page1[3], "sp_kl*:", 7);
+    str_cpy(page1[4], "sp_kh*:", 7);
+    str_cpy(page1[5], "sp_n**:", 7);
+    str_cpy(page1[6], "sp_P**:", 7);
+    str_cpy(page1[7], "SP_I**:", 7);
+    str_cpy(page1[8], "juli**:", 7);
+    str_cpy(page1[9], "st_cha:", 7);
 #if TotalParaNumber>9
     str_cpy(page11[0], "Return || Page 2", 16);
-    str_cpy(page11[1], "line_1:", 7);
-    str_cpy(page11[2], "line_2:", 7);
-    str_cpy(page11[3], "line_3:", 7);
-    str_cpy(page11[4], "line_4:", 7);
-    str_cpy(page11[5], "line_5:", 7);
-    str_cpy(page11[6], "line_6:", 7);
-    str_cpy(page11[7], "line_7:", 7);
-    str_cpy(page11[8], "**4_P3:", 7);
-    str_cpy(page11[9], "**4_P4:", 7);
+    str_cpy(page11[1], "kd_aim:", 7);
+    str_cpy(page11[2], "huadao:", 7);
+    str_cpy(page11[3], "kd_end:", 7);
+    str_cpy(page11[4], "stcha2:", 7);
+    str_cpy(page11[5], "xianfu:", 7);
+    str_cpy(page11[6], "kd_sp*:", 7);
+    str_cpy(page11[7], "sd_pn*:", 7);
+    str_cpy(page11[8], "sd_dn*:", 7);
+    str_cpy(page11[9], "jul_ji:", 7);
 #if TotalParaNumber>18
     str_cpy(page12[0], "Return || Page 3", 16);
-    str_cpy(page12[1], "line_1:", 7);     //22
-    str_cpy(page12[2], "line_2:", 7);       //22
-    str_cpy(page12[3], "line_3:", 7);     //22
-    str_cpy(page12[4], "line_4:", 7);     //21
-    str_cpy(page12[5], "line_5:", 7);      //22
-    str_cpy(page12[6], "line_6:", 7);
-    str_cpy(page12[7], "line_7:", 7);
-    str_cpy(page12[8], "**4_I1:", 7);
-    str_cpy(page12[9], "**4_I2:", 7);
+    str_cpy(page12[1], "k_aim2:", 7);     //22
+    str_cpy(page12[2], "sp_kL*:", 7);       //22
+    str_cpy(page12[3], "start*:", 7);     //22
+    str_cpy(page12[4], "sancha:", 7);     //21
+    str_cpy(page12[5], "sp_kL2:", 7);      //22
+    str_cpy(page12[6], "sp_pn*:", 7);
+    str_cpy(page12[7], "sp_In*:", 7);
+    str_cpy(page12[8], "jiansu:", 7);
+    str_cpy(page12[9], "kd_d_a:", 7);
 #if TotalParaNumber>27
     str_cpy(page13[0], "Return || Page 4", 16);
-    str_cpy(page13[1], "**4_I3:", 7);
-    str_cpy(page13[2], "**4_I4:", 7);
-    str_cpy(page13[3], "**4_D1:", 7);
-    str_cpy(page13[4], "**4_D2:", 7);
-    str_cpy(page13[5], "**4_D3:", 7);
-    str_cpy(page13[6], "**4_D4:", 7);
-    str_cpy(page13[7], "Para33:", 7);
-    str_cpy(page13[8], "Para34:", 7);
+    str_cpy(page13[1], "jians2:", 7);
+    str_cpy(page13[2], "pianch:", 7);
+    str_cpy(page13[3], "yuzhi*:", 7);
+    str_cpy(page13[4], "hd_js*:", 7);
+    str_cpy(page13[5], "mid_js:", 7);
+    str_cpy(page13[6], "sp_kR*:", 7);
+    str_cpy(page13[7], "sp_kR2:", 7);
+    str_cpy(page13[8], "rh_pwm:", 7);
     str_cpy(page13[9], "Para35:", 7);
 #endif
 #endif
@@ -1334,6 +1371,52 @@ void GUI_Load_Data ()
     PID_Matrix2_val(PID_Matrix2[0]);
     PID_Matrix3_val(PID_Matrix3[0]);
     PID_Matrix4_val(PID_Matrix4[0]);
+
+    pid_steer.P = paraData[0];
+    pid_steer.D = paraData[1];
+    pid_steer_temp.P = paraData[0];
+    pid_steer_temp.D = paraData[1];
+    sp_kl = paraData[2];
+    sp_kh = paraData[3];
+    sp_n = paraData[4];
+    pid_motor_right_temp.P = paraData[5];
+    pid_motor_right_temp.I = paraData[6];
+    pid_motor_left_temp.P = paraData[5];
+    pid_motor_left_temp.I = paraData[6];
+    juli = paraData[7];
+    juli_temp = paraData[7];
+    steer_cha = paraData[8];
+    _kind_sum_aim = paraData[9];
+    huandao = paraData[10];
+    _kind_sum_end = paraData[11];
+    steer_cha2 = paraData[12];
+    xianfu = paraData[13];
+    _kind_sum_sp = paraData[14];
+    pid_steer_new.P = paraData[15];
+    pid_steer_new.D = paraData[16];
+    juli_jizhuan = paraData[17];
+    _kind_sum_aim2 = paraData[18];
+    sp_cha_kL = paraData[19];
+    start_sum_aim = paraData[20];
+    sancha_sum_aim = paraData[21];
+    sp_cha_kL2 = paraData[22];
+    pid_motor_rightn.P = paraData[23];
+    pid_motor_rightn.I = paraData[24];
+    pid_motor_leftn.P = paraData[23];
+    pid_motor_leftn.I = paraData[24];
+    jiansu = paraData[25];
+    _kind_end_sum_aim = paraData[26];
+    jiansu2 = paraData[27];
+    piancha = paraData[28];
+    piancha_temp = paraData[28];
+    yuzhi = paraData[29];
+    inrot_jiansu = paraData[30];
+    mid_jiansu_k = paraData[31];
+    sp_cha_kR = paraData[32];
+    sp_cha_kR2 = paraData[33];
+    ruhuan_pwm = paraData[34];
+
+
 
 
 

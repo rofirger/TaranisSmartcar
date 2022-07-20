@@ -16,3 +16,5 @@ Cpu0_Main.o :	../USER/control.h
 ../USER/control.h :
 Cpu0_Main.o :	../USER/img_process.h
 ../USER/img_process.h :
+Cpu0_Main.o :	../USER/debug.h
+../USER/debug.h :
