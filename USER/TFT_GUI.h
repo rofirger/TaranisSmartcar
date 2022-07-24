@@ -14,6 +14,8 @@
 #ifndef CODE_TFT_GUI_H_
 #define CODE_TFT_GUI_H_
 #include "headfile.h"
+#include "control.h"
+#include "Balance.h"
 //当参数个数大于36时需要修改“TFT_GUI.c"的宏定义
 #define TotalParaNumber 36
 //存当前参数的数组，可以在外部调用

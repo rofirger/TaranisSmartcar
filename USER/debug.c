@@ -2,7 +2,7 @@
 #include "isr.h"
 #include "stdint.h"
 #include "img_process.h"
-
+#include "Balance.h"
 /*********************************************************
   @seusmartcar
   名优科创上位机破解协议
@@ -12,18 +12,15 @@
 *********************************************************/
 extern int16_t left_encoder;
 extern int16_t right_encoder;
-extern int _kind;
 float Variable[16]={0};
 float Parameter[14]={0};
 char SendPara=0,send_data=0;
-extern int _kind_sum;
-extern int steer_pwm;
+extern int32_t steer_pwm;
 extern float slope;
 extern int16_t left_speed;
 extern int16_t right_speed;
 extern float target_pwm_left;
 extern float target_pwm_right;
-extern float sp_cha_k;
 extern RoadType road_type;
 
 /*
@@ -56,10 +53,10 @@ void Testdata_generate()
   data=data+1;
   if(data>1000) data=0;
 
-  Variable[0]=left_encoder;
-  Variable[1]=right_encoder;
-  Variable[2]=_kind;
-  Variable[3] = _kind_sum;
+  Variable[0] = left_encoder;
+  Variable[1] = right_encoder;
+  Variable[2] = bend_type;
+  Variable[3] = 0;
   Variable[4] = steer_pwm;
   Variable[5] = slope;
   Variable[6] = left_speed;
@@ -67,9 +64,9 @@ void Testdata_generate()
   Variable[8] = target_pwm_left;
   Variable[9] = target_pwm_right;
   Variable[10] = road_type;
-  Variable[11] = 0;
-  Variable[12] = 0;
-  Variable[13] = 0;
+  Variable[11] = slide_angle;
+  Variable[12] = slide_acc_angle;
+  Variable[13] = slide_gyro_angle;
   Variable[14] = 0;
   Variable[15] = 0;
   //Variable[3]=speed_filter.data_average;

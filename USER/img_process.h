@@ -10,7 +10,7 @@
 
 #include "headfile.h"
 #include <stdint.h>
-
+//#include "TFT_GUI.h"
 typedef char bool;
 #define true 1
 #define false 0
@@ -64,6 +64,13 @@ typedef struct FixPoint
         int16_t pos_col;
 } FixPoint;
 
+typedef struct Offset
+{
+        int16_t _offset[MT9V03X_H];
+        int16_t _end_src_rows;
+        int16_t _total_offset;
+}Offset;
+
 // 二次拟合曲线系数
 typedef struct QuadraticCoeffic
 {
@@ -100,7 +107,32 @@ typedef struct PosErr
         float loc_sum;
 } PosErr;
 
-// 左右线重合
+// 弯道类型
+typedef enum BendType
+{
+        NO_BEND,                 // 无弯
+        LEFT_STRAIGHT_BEND,      // 应该往左拐的直道弯道
+        RIGHT_STRAIGHT_BEND,     // 应该往右拐的直道弯道
+        LEFT_SHARP_BEND,         // 往左拐的急转弯
+        RIGHT_SHARP_BEND,        // 往右拐的急转弯
+        LEFT_NORMAL_BEND,        // 往左拐的正常弯道
+        RIGHT_NORMAL_BEND        // 往右拐的正常弯道
+}BendType;
+
+// 斜率计算相关
+typedef struct SlopeCal
+{
+        float _slope;
+        int16_t _start_cal_y;
+        int16_t _end_cal_y;
+}SlopeCal;
+
+extern Offset mid_offset;
+extern BendType bend_type;
+extern SlopeCal slope_cal;
+
+// 斜坡检测俯仰角
+extern float slide_angle;
 
 float PID_Pos(PosErr *sptr, PID *pid, float now_point, float target_point);
 void GetHistGram(uint8_t width, uint8_t height);

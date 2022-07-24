@@ -22,5 +22,12 @@ extern float gyro_ratio;     //陀螺仪比例
 void get_IMU_data(void);
 float angle_calc(float angle_m, float gyro_m);
 
+extern float slide_angle;
+extern float slide_acc_angle;
+extern float slide_gyro_angle;
 
+extern float slide_acc_ratio;      //加速度计比例   无卡尔曼2.55
+extern float slide_gyro_ratio;     //陀螺仪比例  无卡尔曼0.985
+
+void slide_detect ();
 #endif /* USER_BALANCE_H_ */

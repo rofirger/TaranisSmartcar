@@ -17,49 +17,29 @@ uint8_t right_line[MT9V03X_H];
 // int16_t pwm_left = 8000, pwm_right = 7000;
 int16_t LEFT_SPEED_BASE = 360;
 int16_t RIGHT_SPEED_BASE = 360;
-float huandao;
 
- int16_t left_speed = 140, right_speed = 140;
+int16_t left_speed = 360, right_speed = 360;
 extern RoadType road_type;
 volatile float slope = 0;
 unsigned char thredshold = 0;
 bool is_right_out = false;
 int32_t steer_pwm = 625;
-extern int16_t left_encoder;
-extern int16_t right_encoder;
+float pwm_steer;
+float last_pwm_steer;
 extern int pwm_TFT;
 // 电机
 uint32_t pwm_right;
-uint32_t pwm_left ;
+uint32_t pwm_left;
 // 直方图
 short hist_gram[256];
 // 是否暂停
 extern bool is_stop;
-extern int _kind;
-int steer_cha;
-int _kind_sum=0;
-int _kind_sum_aim;
-int _kind_sum_end;
-int steer_cha2;
-extern int juli;
-int juli_temp;
-int xianfu;
-int juli_jizhuan;
-int sancha_sum1;
-int sancha_sum2;
-int sancha_sum_aim;
-PID pid_steer_temp;
-PID pid_steer_new;
-extern int _kind_end_sumf;
-int yuzhi;//slope在小S弯特殊处理的阈值
-float pwm_steer;
-int ruhuan_pwm;
-extern int huandao_inL;
-extern int huandao_outL;
-extern int huandao_inR;
-extern int huandao_outR;
-extern float piancha;
-extern float piancha_temp;
+
+extern float target_pwm_left;
+extern float target_pwm_right;
+
+extern int16_t left_encoder;
+extern int16_t right_encoder;
 
 void Init ()
 {
@@ -89,6 +69,7 @@ void Init ()
     gpio_init(P33_10, GPO, 0, PUSHPULL);
     // 程序运行指示灯GPIO初始化
     gpio_init(P21_4, GPO, 0, PUSHPULL);
+    gpio_init(P21_5, GPO, 0, PUSHPULL);
     // TFT初始化
     //lcd_init();
     GUI_init(ERU_CH5_REQ1_P15_8);
@@ -97,10 +78,13 @@ void Init ()
 
     // pit中断
     pit_interrupt_ms(CCU6_0, PIT_CH0, 20);
-
+    pit_interrupt_ms(CCU6_0, PIT_CH1, 5);
+    // 急转弯以及出完检测
+    pit_interrupt_ms(CCU6_1, PIT_CH0, 10);
     // esp spi初始化
-    spi_init(SPI_1, SPI1_SCLK_P10_2, SPI1_MOSI_P10_3, SPI1_MISO_P10_1, SPI1_CS9_P10_5, 3, 10 * 1000 * 1000);
-
+    //spi_init(SPI_1, SPI1_SCLK_P10_2, SPI1_MOSI_P10_3, SPI1_MISO_P10_1, SPI1_CS9_P10_5, 3, 10 * 1000 * 1000);
+    icm20602_init_spi();
+    systick_delay_ms(STM1,2000);
     gpio_init(P20_13, GPO, 0, PUSHPULL);
 
     pwm_duty(ATOM0_CH4_P02_4, 0);    // 右轮前进
@@ -175,6 +159,7 @@ void ControlSpeed ()
 int core0_main (void)
 {
     Init();
+
     while (road_type != IN_CARBARN)
     {
 
@@ -191,7 +176,7 @@ int core0_main (void)
                 }
             }
             //if (location[0] == 3)
-            //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
+                //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
             GetHistGram(MT9V03X_W, MT9V03X_H);
             thredshold = OTSUThreshold();
             BinaryzationProcess(MT9V03X_H, MT9V03X_W, thredshold);
@@ -203,192 +188,67 @@ int core0_main (void)
                 is_go = true;
             }
             else
+            {
                 is_go = false;
-
-
-
-            //Stop();
-            if(road_type == IN_LEFT_JUNCTION_ING||road_type == OUT_LEFT_JUNCTION_ING)
-            {
-                juli = 15;
+                error_motor_left.currentError = 0;
+                error_motor_left.lastError = 0;
+                error_motor_left.previoursError = 0;
+                error_motor_right.currentError = 0;
+                error_motor_right.lastError = 0;
+                error_motor_right.previoursError = 0;
+                target_pwm_left = 0;
+                target_pwm_right=0;
+                pwm_duty(ATOM0_CH4_P02_4, 0);    // 右轮前进
+                pwm_duty(ATOM0_CH5_P02_5, 0);    // 左轮前进
+                pwm_duty(ATOM0_CH6_P02_6, 0);    // 左轮后退
+                pwm_duty(ATOM0_CH7_P02_7, 0);    // 右轮退
             }
 
-            if(road_type == IN_RIGHT_JUNCTION_ING||road_type == OUT_RIGHT_JUNCTION_ING)
+            if ((bend_type == NO_BEND || bend_type == LEFT_NORMAL_BEND || bend_type == RIGHT_NORMAL_BEND) && bend_deal._out_bend_count == 0)
             {
-                juli = 15;
+                //SteerPidChange(pid_steer.P, pid_steer.I, pid_steer.D);
+                pwm_steer = PID_Pos(&error_steer, &pid_steer, 0, (float)mid_offset._total_offset / (float)(slope_cal._end_cal_y - mid_offset._end_src_rows));
+                // 如果pwm_steer超过一定的阈值,需要注意是否是处在直道上，或者处在小s弯上
+                pwm_steer = last_pwm_steer * 0.2 + pwm_steer * 0.8;
+                gpio_set(P21_5, 0);
+            }
+            else
+            {
+                //SteerPidChange(pid_steer_sharp.P, pid_steer_sharp.I, pid_steer_sharp.D);
+                pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
+                gpio_set(P21_5, 1);
             }
 
-
-            if(_kind==1||_kind_end_sumf==1)
+            // 分路段
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN ||
+                road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN ||
+                road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN ||
+                road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
             {
-                juli = juli_jizhuan;
-                pid_steer.P=pid_steer_new.P;
-                pid_steer.D=pid_steer_new.D;
-
-
-            }
-            if(_kind==2||_kind_end_sumf==2)
-            {
-                juli = juli_jizhuan;
-                pid_steer.P=pid_steer_new.P;
-                pid_steer.D=pid_steer_new.D;
-            }
-            if(_kind==0)
-            {
-                juli = juli_temp;
-                pid_steer.P=pid_steer_temp.P;
-                pid_steer.D=pid_steer_temp.D;
-            }
-            /*
-            if(_kind==1&&slope<-yuzhi)
-            {
-                juli = juli_temp;
-                pid_steer.P=pid_steer_temp.P;
-                pid_steer.D=pid_steer_temp.D;
-            }
-            if(_kind==2&&slope>yuzhi)
-            {
-                juli = juli_temp;
-                pid_steer.P=pid_steer_temp.P;
-                pid_steer.D=pid_steer_temp.D;
-            }
-            */
-
-            if(road_type!=LEFT_ROTARY_IN_SECOND_SUNKEN&&road_type!=RIGHT_ROTARY_IN_SECOND_SUNKEN&&_kind==0)
-            {
-                juli = juli_temp;
-            }
-            if(road_type!=IN_LEFT_ROTARY&&road_type !=IN_RIGHT_ROTARY&&_kind==0)
-            {
-                juli = juli_temp;
-            }
-            if(road_type == LEFT_ROTARY_IN_SECOND_SUNKEN||road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
-            {
-                juli = 15;
+                pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
+                pwm_steer *= 1.5;
             }
 
-            if(road_type == LEFT_ROTARY_IN_FIRST_SUNKEN||road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                juli = 15;
-            }
-            if(road_type ==IN_LEFT_ROTARY||road_type ==IN_RIGHT_ROTARY)
-            {
-                juli = 15;
-            }
-            if(road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN||road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
-            {
-                juli = 15;
-            }
-            if((huandao_inL == 1&&huandao_outL == 0)||(huandao_inR == 1&&huandao_outR == 0))
-            {
-                juli =15;
-            }
-
-
-            /*
-            if(road_type == IN_LEFT_JUNCTION_ING||road_type == IN_RIGHT_JUNCTION_ING)
-            {
-                sancha_sum1++;
-                juli = 15;
-            }
-            if((sancha_sum1>sancha_sum_aim)&&(sancha_sum2<sancha_sum_aim))
-            {
-                juli = juli_temp;
-            }
-            if(road_type == OUT_LEFT_JUNCTION_ING||road_type == OUT_RIGHT_JUNCTION_ING)
-            {
-                sancha_sum2++;
-                juli = 15;
-            }
-            if((sancha_sum1>sancha_sum_aim)&&(sancha_sum2>sancha_sum_aim))
-            {
-                juli = juli_temp;
-            }
-            */
-
-            if(_kind==1)
-            {
-                slope = fabsf(slope)/20;
-            }
-            if(_kind==2)
-            {
-                slope = -fabsf(slope)/20;
-            }
-
-            pwm_steer = PID_Pos(&error_steer, &pid_steer, 0, slope);
             error_steer.loc_sum = 0;
+            sharp_error_steer.loc_sum = 0;
             steer_pwm = 625 + atan(pwm_steer) * 95.0;
 
-
-            if(road_type==LEFT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                piancha = 0.5;
-            }
-            if(road_type==RIGHT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                piancha = 0.5;
-            }
-            if(road_type!=RIGHT_ROTARY_IN_FIRST_SUNKEN||road_type!=LEFT_ROTARY_IN_FIRST_SUNKEN)
-            {
-                piancha = piancha_temp;
-            }
-
-
-
-
-            if (steer_pwm > (700-xianfu)&&juli==juli_temp)
-                steer_pwm =(700-xianfu);
-            else if (steer_pwm < (550+xianfu)&&juli==juli_temp)
-                steer_pwm = (550+xianfu);
-            if (steer_pwm > 700&&(juli==15||juli==juli_jizhuan))
-                steer_pwm = 700;
-            else if (steer_pwm < 550&&(juli==15||juli==juli_jizhuan))
-                steer_pwm = 550;
-
-
-
-            if(_kind==1)
-            {
-                _kind_sum++;
-            }
-            if(_kind==2)
-            {
-                _kind_sum++;
-            }
-            if(_kind==0)
-            {
-                _kind_sum=0;
-            }
-            /*
-            if(_kind==1&&_kind_sum>_kind_sum_aim)
-            {
-                steer_pwm = 700-steer_cha;
-            }
-            if(_kind==2&&_kind_sum>_kind_sum_aim)
-            {
-                steer_pwm = 550+steer_cha;
-            }
-            if(_kind==1&&_kind_sum>_kind_sum_end)
-            {
-                steer_pwm = 700-steer_cha2;
-            }
-            if(_kind==2&&_kind_sum>_kind_sum_end)
-            {
-                steer_pwm = 550+steer_cha2;
-            }*/
+            if (steer_pwm > (700))
+                steer_pwm = (700);
+            else if (steer_pwm < (550))
+                steer_pwm = (550);
 
             pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
             //pwm_duty(ATOM0_CH4_P02_4, 1000);    // 右轮前进
             //pwm_duty(ATOM0_CH5_P02_5, 1000);    // 左轮前进
             //pwm_duty(ATOM0_CH6_P02_6, 0);    // 右轮前进
             //pwm_duty(ATOM0_CH7_P02_7, 0);    // 左轮前进
-            if (road_type != IN_CARBARN && is_go && _kind == 0)
+            left_speed = LEFT_SPEED_BASE  - sharp_bend_sub_speed - pwm_steer * diff_speed._left_speed_factor;
+            right_speed = RIGHT_SPEED_BASE - sharp_bend_sub_speed + pwm_steer * diff_speed._right_speed_factor;
+            if (road_type != IN_CARBARN && is_go)
             {
-                pwm_right = pwm_TFT;
-                pwm_left = pwm_TFT;
 
-                //left_speed = LEFT_SPEED_BASE - slope * 18.5;
-                //right_speed = RIGHT_SPEED_BASE + slope * 18.5;
+
                 //pwm_duty(ATOM0_CH4_P02_4, pwm_right );    // 右轮前进
                 //pwm_duty(ATOM0_CH5_P02_5, pwm_left);    // 左轮前进
                 //pwm_duty(ATOM0_CH6_P02_6, 0 );    // 左轮后退
@@ -398,7 +258,7 @@ int core0_main (void)
             {
                 //pwm_duty(ATOM0_CH1_P33_9, 700);      // 550最右, 625中值, 700最左
                 systick_delay_ms(STM0, 30);
-                pwm_duty(ATOM0_CH1_P33_9, 625);      // 550最右, 625中值, 700最左
+                //pwm_duty(ATOM0_CH1_P33_9, 625);      // 550最右, 625中值, 700最左
                 LEFT_SPEED_BASE = 0;
                 RIGHT_SPEED_BASE = 0;
                 left_speed = 0;
@@ -409,13 +269,13 @@ int core0_main (void)
                 //pwm_duty(ATOM0_CH7_P02_7,0);
             }
 
-            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN || _kind != 0)
+            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
             {
-                gpio_set(P33_10, 1);
+                //gpio_set(P33_10, 1);
             }
             else
             {
-                gpio_set(P33_10, 0);
+                //gpio_set(P33_10, 0);
             }
 
             if (location[0] == 3)
@@ -425,17 +285,33 @@ int core0_main (void)
                     src_pixel_mat[i][left_line[i]] = 0;
                     src_pixel_mat[i][mid_line[i]] = 0;
                     src_pixel_mat[i][right_line[i]] = 0;
+                    if (i == slope_cal._start_cal_y || i == sharp_slope_cal._start_cal_y)
+                    {
+                        memset(src_pixel_mat[i], 0, sizeof(char) * MT9V03X_W);
+                    }
                 }
                 lcd_displayimage032((uint8_t*) src_pixel_mat, MT9V03X_W, MT9V03X_H);
-                //lcd_showfloat(0, 6, slope, 3, 3);
-                //lcd_showuint16(0, 7, road_type);
+                lcd_showint16(0, 5, mid_offset._end_src_rows);
+                lcd_showint16(50, 5, bend_type);
+                lcd_showfloat(0, 6, slope, 3, 3);
+                lcd_showfloat(50, 6, pwm_steer, 4, 3);
+                lcd_showuint16(0, 7, road_type);
+                lcd_showint16(0, 9, bend_deal._bend_count);
+                lcd_showint16(50, 9, bend_deal._out_bend_count);
+                //lcd_showfloat(50, 7, (float)mid_offset._total_offset / (float)(MT9V03X_H - mid_offset._end_src_rows), 3, 3);
                 //uart_putbuff(UART_3, src_pixel_mat[0], MT9V03X_W * MT9V03X_H);
 
                 //spi_mosi(SPI_1, SPI1_CS9_P10_5, src_pixel_mat[0], NULL, 60 * 90, 1);
             }
-
+//            if (location[0] == 2)
+//            {
+//                lcd_showint16(0, 7, target_pwm_left);
+//                lcd_showint16(50, 7, target_pwm_right);
+//                lcd_showint16(0, 8, left_encoder);
+//                lcd_showint16(50, 8, right_encoder);
+//            }
             mt9v03x_finish_flag = 0;
         }
-        supermonitor();
+        //supermonitor();
     }
 }

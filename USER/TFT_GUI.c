@@ -59,45 +59,9 @@ static uint8 controlFlag = 0;
 static uint8 settingBit = 0;
 uint8 wifiInitOK=0;
 
-extern int sp_kl;
-extern int sp_kh;
-extern int sp_n;
-extern int pwm_TFT;
-extern PID pid_motor_right_temp;
-extern PID pid_motor_left_temp;
-extern int steer_cha;
-extern int _kind_sum_aim;
-extern int _kind_sum_end;
-extern int steer_cha2;
-
-extern float huandao;
-extern int juli;
-extern int juli_temp;
-extern int xianfu;
-extern int _kind_sum_sp;
-extern PID pid_steer_temp;
-extern PID pid_steer_new;
-extern int juli_jizhuan;
 uint8 PID_Matrix1[7][7],PID_Matrix2[7][7],PID_Matrix3[7][7];
 float PID_Matrix4[3][4];
-int _kind_sum_aim2;
-extern float sp_cha_kL;
-extern float sp_cha_kL2;
-extern float sp_cha_kR;
-extern float sp_cha_kR2;
-extern float start_sum_aim;
-extern int sancha_sum_aim;
-extern PID pid_motor_rightn;
-extern PID pid_motor_leftn;
-extern int jiansu;
-extern int _kind_end_sum_aim;
-extern int jiansu2;
-extern float piancha;
-extern int yuzhi;
-extern int inrot_jiansu;
-extern float mid_jiansu_k;
-extern int ruhuan_pwm;
-float piancha_temp;
+
 //初始化TFT屏幕
 void GUI_init (ERU_PIN_enum eru_pin)
 {
@@ -940,53 +904,53 @@ void received (uint8 a, uint8 b)
 }
 void page_init ()
 {
-    str_cpy(page0[0], "Welcome......", 13);
-    str_cpy(page0[1], "Adjusting Para", 14);
-    str_cpy(page0[2], "Control Mode", 12);
-    str_cpy(page0[3], "Inductor Test", 13);
+    str_cpy(page0[0], "****WELCOME****", 15);
+    str_cpy(page0[1], "|  Set Param   |", 16);
+    str_cpy(page0[2], "| Control Mode |", 16);
+    str_cpy(page0[3], "|  Image View  |", 16);
     str_cpy(page1[0], "Return || Page 1", 16);        //paraXX中的XX是数组索引，paraData[XX]
-    str_cpy(page1[1], "P*****:", 7);
-    str_cpy(page1[2], "D*****:", 7);
-    str_cpy(page1[3], "sp_kl*:", 7);
-    str_cpy(page1[4], "sp_kh*:", 7);
-    str_cpy(page1[5], "sp_n**:", 7);
-    str_cpy(page1[6], "sp_P**:", 7);
-    str_cpy(page1[7], "SP_I**:", 7);
-    str_cpy(page1[8], "juli**:", 7);
-    str_cpy(page1[9], "st_cha:", 7);
+    str_cpy(page1[1], "str_NP:", 7);
+    str_cpy(page1[2], "str_ND:", 7);
+    str_cpy(page1[3], "left_P:", 7);
+    str_cpy(page1[4], "left_I:", 7);
+    str_cpy(page1[5], "rightP:", 7);
+    str_cpy(page1[6], "rightI:", 7);
+    str_cpy(page1[7], "bend_P:", 7);
+    str_cpy(page1[8], "bend_I:", 7);
+    str_cpy(page1[9], "bend_D:", 7);
 #if TotalParaNumber>9
     str_cpy(page11[0], "Return || Page 2", 16);
-    str_cpy(page11[1], "kd_aim:", 7);
-    str_cpy(page11[2], "huadao:", 7);
-    str_cpy(page11[3], "kd_end:", 7);
-    str_cpy(page11[4], "stcha2:", 7);
-    str_cpy(page11[5], "xianfu:", 7);
-    str_cpy(page11[6], "kd_sp*:", 7);
-    str_cpy(page11[7], "sd_pn*:", 7);
-    str_cpy(page11[8], "sd_dn*:", 7);
-    str_cpy(page11[9], "jul_ji:", 7);
+    str_cpy(page11[1], "speedL:", 7);
+    str_cpy(page11[2], "speedR:", 7);
+    str_cpy(page11[3], "sp_Nst:", 7);
+    str_cpy(page11[4], "sp_Ned:", 7);
+    str_cpy(page11[5], "str_SP:", 7);
+    str_cpy(page11[6], "str_SD:", 7);
+    str_cpy(page11[7], "sp_Sst:", 7);
+    str_cpy(page11[8], "sp_Sed:", 7);
+    str_cpy(page11[9], "******:", 7);
 #if TotalParaNumber>18
     str_cpy(page12[0], "Return || Page 3", 16);
-    str_cpy(page12[1], "k_aim2:", 7);     //22
-    str_cpy(page12[2], "sp_kL*:", 7);       //22
-    str_cpy(page12[3], "start*:", 7);     //22
-    str_cpy(page12[4], "sancha:", 7);     //21
-    str_cpy(page12[5], "sp_kL2:", 7);      //22
-    str_cpy(page12[6], "sp_pn*:", 7);
-    str_cpy(page12[7], "sp_In*:", 7);
-    str_cpy(page12[8], "jiansu:", 7);
-    str_cpy(page12[9], "kd_d_a:", 7);
+    str_cpy(page12[1], "dif_Ls:", 7);     //22
+    str_cpy(page12[2], "dif_Rs:", 7);       //22
+    str_cpy(page12[3], "acc_rt:", 7);     //22
+    str_cpy(page12[4], "gyro_r:", 7);     //21
+    str_cpy(page12[5], "bendTH:", 7);      //22
+    str_cpy(page12[6], "O_bdTH:", 7);
+    str_cpy(page12[7], "NOfsTH:", 7);
+    str_cpy(page12[8], "bdSSPD:", 7);
+    str_cpy(page12[9], "******:", 7);
 #if TotalParaNumber>27
     str_cpy(page13[0], "Return || Page 4", 16);
-    str_cpy(page13[1], "jians2:", 7);
-    str_cpy(page13[2], "pianch:", 7);
-    str_cpy(page13[3], "yuzhi*:", 7);
-    str_cpy(page13[4], "hd_js*:", 7);
-    str_cpy(page13[5], "mid_js:", 7);
-    str_cpy(page13[6], "sp_kR*:", 7);
-    str_cpy(page13[7], "sp_kR2:", 7);
-    str_cpy(page13[8], "rh_pwm:", 7);
-    str_cpy(page13[9], "Para35:", 7);
+    str_cpy(page13[1], "******:", 7);
+    str_cpy(page13[2], "******:", 7);
+    str_cpy(page13[3], "******:", 7);
+    str_cpy(page13[4], "******:", 7);
+    str_cpy(page13[5], "******:", 7);
+    str_cpy(page13[6], "******:", 7);
+    str_cpy(page13[7], "******:", 7);
+    str_cpy(page13[8], "******:", 7);
+    str_cpy(page13[9], "******:", 7);
 #endif
 #endif
 #endif
@@ -1372,56 +1336,37 @@ void GUI_Load_Data ()
     PID_Matrix3_val(PID_Matrix3[0]);
     PID_Matrix4_val(PID_Matrix4[0]);
 
+    // page 1
     pid_steer.P = paraData[0];
     pid_steer.D = paraData[1];
-    pid_steer_temp.P = paraData[0];
-    pid_steer_temp.D = paraData[1];
-    sp_kl = paraData[2];
-    sp_kh = paraData[3];
-    sp_n = paraData[4];
-    pid_motor_right_temp.P = paraData[5];
-    pid_motor_right_temp.I = paraData[6];
-    pid_motor_left_temp.P = paraData[5];
-    pid_motor_left_temp.I = paraData[6];
-    juli = paraData[7];
-    juli_temp = paraData[7];
-    steer_cha = paraData[8];
-    _kind_sum_aim = paraData[9];
-    huandao = paraData[10];
-    _kind_sum_end = paraData[11];
-    steer_cha2 = paraData[12];
-    xianfu = paraData[13];
-    _kind_sum_sp = paraData[14];
-    pid_steer_new.P = paraData[15];
-    pid_steer_new.D = paraData[16];
-    juli_jizhuan = paraData[17];
-    _kind_sum_aim2 = paraData[18];
-    sp_cha_kL = paraData[19];
-    start_sum_aim = paraData[20];
-    sancha_sum_aim = paraData[21];
-    sp_cha_kL2 = paraData[22];
-    pid_motor_rightn.P = paraData[23];
-    pid_motor_rightn.I = paraData[24];
-    pid_motor_leftn.P = paraData[23];
-    pid_motor_leftn.I = paraData[24];
-    jiansu = paraData[25];
-    _kind_end_sum_aim = paraData[26];
-    jiansu2 = paraData[27];
-    piancha = paraData[28];
-    piancha_temp = paraData[28];
-    yuzhi = paraData[29];
-    inrot_jiansu = paraData[30];
-    mid_jiansu_k = paraData[31];
-    sp_cha_kR = paraData[32];
-    sp_cha_kR2 = paraData[33];
-    ruhuan_pwm = paraData[34];
+    pid_motor_left.P = paraData[2];
+    pid_motor_left.I = paraData[3];
+    pid_motor_right.P = paraData[4];
+    pid_motor_right.I = paraData[5];
+    pid_sharp_bend.P = paraData[6];
+    pid_sharp_bend.I = paraData[7];
+    pid_sharp_bend.D = paraData[8];
 
 
+    // page 2
+    LEFT_SPEED_BASE = paraData[9];
+    RIGHT_SPEED_BASE = paraData[10];
+    slope_cal._start_cal_y = paraData[11];
+    slope_cal._end_cal_y = paraData[12];
+    pid_steer_sharp.P = paraData[13];
+    pid_steer_sharp.D = paraData[14];
+    sharp_slope_cal._start_cal_y = paraData[15];
+    sharp_slope_cal._end_cal_y = paraData[16];
 
-
-
-
-
+    // page3
+    diff_speed._left_speed_factor = paraData[18];
+    diff_speed._right_speed_factor = paraData[19];
+    slide_acc_ratio = paraData[20];
+    slide_gyro_ratio = paraData[21];
+    bend_threshold = paraData[22];
+    out_bend_threshold = paraData[23];
+    no_bend_offset_threshold = paraData[24];
+    sharp_bend_sub_speed = paraData[25];
 }
 
 

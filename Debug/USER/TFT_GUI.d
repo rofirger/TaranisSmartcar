@@ -10,6 +10,10 @@ TFT_GUI.o :	../USER/control.h
 ../USER/control.h :
 TFT_GUI.o :	../USER/img_process.h
 ../USER/img_process.h :
+TFT_GUI.o :	../USER/Balance.h
+../USER/Balance.h :
+TFT_GUI.o :	../USER/control.h
+../USER/control.h :
 TFT_GUI.o :	../USER/img_process.h
 ../USER/img_process.h :
 TFT_GUI.o :	../USER/img_process.h

@@ -18,3 +18,7 @@ isr.o :	../USER/img_process.h
 ../USER/img_process.h :
 isr.o :	../USER/TFT_GUI.h
 ../USER/TFT_GUI.h :
+isr.o :	../USER/control.h
+../USER/control.h :
+isr.o :	../USER/Balance.h
+../USER/Balance.h :

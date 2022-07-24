@@ -11,14 +11,14 @@
 // 舵机PD
 PID pid_steer_standard =  {0.830, 0, 4.125};
 
-extern PID pid_steer = {0.50, 0, 0};
-
+PID pid_steer = {0.28, 0, 0};
+PID pid_steer_sharp = {0.5, 0, 0};
 
 
 
 
 PosErr error_steer = {{0, 0, 0}, 0};
-
+PosErr sharp_error_steer = {{0, 0, 0}, 0};
 
 
 // 电机PID
@@ -31,6 +31,19 @@ Error error_motor_right = {0, 0, 0};
 // 急转弯PID
 PID pid_sharp_bend = {0.0052, 0.00002, 0.00002};
 Error error_sharp_bend = {0, 0, 0};
+
+DiffSpeed diff_speed;
+
+int16_t sharp_bend_sub_speed = 30;
+
+BendDeal bend_deal = {._last_bend_type = NO_BEND, ._out_bend_count = 0, ._bend_count = 0};
+// 出弯计算阈值,具体应用查看中断函数
+float out_bend_threshold = 0.3;
+// 处在弯道中的阈值
+int32_t bend_threshold = 30;
+// 直道或者小s完偏差阈值
+float no_bend_offset_threshold = 0.2;
+
 
 /*<!
  *  @brief      增量式PID
@@ -83,4 +96,10 @@ inline void SteerPidReset()
     pid_steer.P = pid_steer_standard.P;
     pid_steer.I = pid_steer_standard.I;
     pid_steer.D = pid_steer_standard.D;
+}
+
+inline int16_t NonLinearProcessMidOffset(int16_t _offset)
+{
+    float _tmp = _offset / 40.0f;
+    return (_tmp / 3.0f + 2 * _tmp * _tmp / 3.0f);
 }

@@ -8,3 +8,5 @@ debug.o :	../USER/isr.h
 ../USER/isr.h :
 debug.o :	../USER/img_process.h
 ../USER/img_process.h :
+debug.o :	../USER/Balance.h
+../USER/Balance.h :

@@ -241,11 +241,11 @@ void get_icm20602_gyro(void)
 //-------------------------------------------------------------------------------------------------------------------
 //  以下函数是使用硬件SPI通信，相比较IIC，速度比IIC快非常多。
 //-------------------------------------------------------------------------------------------------------------------
-#define SPI_NUM         SPI_0
-#define SPI_SCK_PIN     SPI0_SCLK_P20_11    //接模块SPC
-#define SPI_MOSI_PIN    SPI0_MOSI_P20_14    //接模块SDI
-#define SPI_MISO_PIN    SPI0_MISO_P20_12    //接模块SDO
-#define SPI_CS_PIN      SPI0_CS2_P20_13     //接模块CS
+#define SPI_NUM         SPI_1
+#define SPI_SCK_PIN     SPI1_SCLK_P10_2    //接模块SPC
+#define SPI_MOSI_PIN    SPI1_MOSI_P10_3    //接模块SDI
+#define SPI_MISO_PIN    SPI1_MISO_P10_1    //接模块SDO
+#define SPI_CS_PIN      SPI1_CS9_P10_5     //接模块CS
 
 //-------------------------------------------------------------------------------------------------------------------
 //  @brief      ICM20602 SPI写寄存器
