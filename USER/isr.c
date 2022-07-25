@@ -45,12 +45,32 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 
     if (is_go)
     {
-        target_pwm_left += PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
-        target_pwm_right += PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+        if (ABS((int)left_encoder - (int)left_speed) < 20)
+        {
+            target_pwm_left += PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
+        }
+        else if (ABS((int)left_encoder - (int)left_speed) >= 20)
+        {
+            if (bend_type == NO_BEND)
+                target_pwm_left += 1.4 * PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
+            else
+                target_pwm_left += 2 * PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
+        }
+        if (ABS((int)right_encoder - (int)right_speed) < 20)
+        {
+            target_pwm_right += PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+        }
+        else if (ABS((int)right_encoder - (int)right_speed) >= 20)
+        {
+            if (bend_type == NO_BEND)
+                target_pwm_right += 1.4 * PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+            else
+                target_pwm_right += 2 * PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+        }
 
-        if (target_pwm_left > 7000 || target_pwm_left < -5000)
+        if (target_pwm_left > 9000 || target_pwm_left < -9000)
             target_pwm_left = 0;
-        if (target_pwm_right > 7000 || target_pwm_right < -5000)
+        if (target_pwm_right > 9000 || target_pwm_right < -9000)
             target_pwm_right = 0;
 
         if (target_pwm_left >= 0 && target_pwm_right >= 0)
@@ -102,8 +122,7 @@ IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
 {
     enableInterrupts();    //开启中断嵌套
     PIT_CLEAR_FLAG(CCU6_1, PIT_CH0);
-    if (bend_type == LEFT_STRAIGHT_BEND ||
-            bend_type == RIGHT_STRAIGHT_BEND || bend_type == LEFT_SHARP_BEND
+    if (bend_type == LEFT_STRAIGHT_BEND || bend_type == RIGHT_STRAIGHT_BEND || bend_type == LEFT_SHARP_BEND
             || bend_type == RIGHT_SHARP_BEND)
     {
 
@@ -146,38 +165,38 @@ IFX_INTERRUPT(cc61_pit_ch0_isr, 0, CCU6_1_CH0_ISR_PRIORITY)
 
 IFX_INTERRUPT(cc61_pit_ch1_isr, 0, CCU6_1_CH1_ISR_PRIORITY)
 {
-enableInterrupts();    //开启中断嵌套
-PIT_CLEAR_FLAG(CCU6_1, PIT_CH1);
+    enableInterrupts();    //开启中断嵌套
+    PIT_CLEAR_FLAG(CCU6_1, PIT_CH1);
 
 }
 
 IFX_INTERRUPT(eru_ch0_ch4_isr, 0, ERU_CH0_CH4_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-if (GET_GPIO_FLAG(ERU_CH0_REQ4_P10_7))    //通道0中断
-{
-    CLEAR_GPIO_FLAG(ERU_CH0_REQ4_P10_7);
-}
+    enableInterrupts();    //开启中断嵌套
+    if (GET_GPIO_FLAG(ERU_CH0_REQ4_P10_7))    //通道0中断
+    {
+        CLEAR_GPIO_FLAG(ERU_CH0_REQ4_P10_7);
+    }
 
-if (GET_GPIO_FLAG(ERU_CH4_REQ13_P15_5))    //通道4中断
-{
-    CLEAR_GPIO_FLAG(ERU_CH4_REQ13_P15_5);
-}
+    if (GET_GPIO_FLAG(ERU_CH4_REQ13_P15_5))    //通道4中断
+    {
+        CLEAR_GPIO_FLAG(ERU_CH4_REQ13_P15_5);
+    }
 }
 
 IFX_INTERRUPT(eru_ch1_ch5_isr, 0, ERU_CH1_CH5_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-if (GET_GPIO_FLAG(ERU_CH1_REQ5_P10_8))    //通道1中断
-{
-    CLEAR_GPIO_FLAG(ERU_CH1_REQ5_P10_8);
-}
+    enableInterrupts();    //开启中断嵌套
+    if (GET_GPIO_FLAG(ERU_CH1_REQ5_P10_8))    //通道1中断
+    {
+        CLEAR_GPIO_FLAG(ERU_CH1_REQ5_P10_8);
+    }
 
-if (GET_GPIO_FLAG(ERU_CH5_REQ1_P15_8))    //通道5中断
-{
-    eru_triggered();
-    CLEAR_GPIO_FLAG(ERU_CH5_REQ1_P15_8);
-}
+    if (GET_GPIO_FLAG(ERU_CH5_REQ1_P15_8))    //通道5中断
+    {
+        eru_triggered();
+        CLEAR_GPIO_FLAG(ERU_CH5_REQ1_P15_8);
+    }
 }
 
 //由于摄像头pclk引脚默认占用了 2通道，用于触发DMA，因此这里不再定义中断函数
@@ -198,125 +217,125 @@ if (GET_GPIO_FLAG(ERU_CH5_REQ1_P15_8))    //通道5中断
 
 IFX_INTERRUPT(eru_ch3_ch7_isr, 0, ERU_CH3_CH7_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-if (GET_GPIO_FLAG(ERU_CH3_REQ6_P02_0))    //通道3中断
-{
-    CLEAR_GPIO_FLAG(ERU_CH3_REQ6_P02_0);
-    if (CAMERA_GRAYSCALE == camera_type)
-        mt9v03x_vsync();
-    else if (CAMERA_BIN_UART == camera_type)
-        ov7725_uart_vsync();
-    else if (CAMERA_BIN == camera_type)
-        ov7725_vsync();
+    enableInterrupts();    //开启中断嵌套
+    if (GET_GPIO_FLAG(ERU_CH3_REQ6_P02_0))    //通道3中断
+    {
+        CLEAR_GPIO_FLAG(ERU_CH3_REQ6_P02_0);
+        if (CAMERA_GRAYSCALE == camera_type)
+            mt9v03x_vsync();
+        else if (CAMERA_BIN_UART == camera_type)
+            ov7725_uart_vsync();
+        else if (CAMERA_BIN == camera_type)
+            ov7725_vsync();
 
-}
-if (GET_GPIO_FLAG(ERU_CH7_REQ16_P15_1))    //通道7中断
-{
-    CLEAR_GPIO_FLAG(ERU_CH7_REQ16_P15_1);
+    }
+    if (GET_GPIO_FLAG(ERU_CH7_REQ16_P15_1))    //通道7中断
+    {
+        CLEAR_GPIO_FLAG(ERU_CH7_REQ16_P15_1);
 
-}
+    }
 }
 
 IFX_INTERRUPT(dma_ch5_isr, 0, ERU_DMA_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
+    enableInterrupts();    //开启中断嵌套
 
-if (CAMERA_GRAYSCALE == camera_type)
-    mt9v03x_dma();
-else if (CAMERA_BIN_UART == camera_type)
-    ov7725_uart_dma();
-else if (CAMERA_BIN == camera_type)
-    ov7725_dma();
+    if (CAMERA_GRAYSCALE == camera_type)
+        mt9v03x_dma();
+    else if (CAMERA_BIN_UART == camera_type)
+        ov7725_uart_dma();
+    else if (CAMERA_BIN == camera_type)
+        ov7725_dma();
 }
 
 //串口中断函数  示例
 IFX_INTERRUPT(uart0_tx_isr, 0, UART0_TX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrTransmit(&uart0_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrTransmit(&uart0_handle);
 }
 IFX_INTERRUPT(uart0_rx_isr, 0, UART0_RX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrReceive(&uart0_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrReceive(&uart0_handle);
 }
 IFX_INTERRUPT(uart0_er_isr, 0, UART0_ER_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrError(&uart0_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrError(&uart0_handle);
 }
 
 //串口1默认连接到摄像头配置串口
 IFX_INTERRUPT(uart1_tx_isr, 0, UART1_TX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrTransmit(&uart1_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrTransmit(&uart1_handle);
 }
 IFX_INTERRUPT(uart1_rx_isr, 0, UART1_RX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrReceive(&uart1_handle);
-if (CAMERA_GRAYSCALE == camera_type)
-    mt9v03x_uart_callback();
-else if (CAMERA_BIN_UART == camera_type)
-    ov7725_uart_callback();
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrReceive(&uart1_handle);
+    if (CAMERA_GRAYSCALE == camera_type)
+        mt9v03x_uart_callback();
+    else if (CAMERA_BIN_UART == camera_type)
+        ov7725_uart_callback();
 }
 IFX_INTERRUPT(uart1_er_isr, 0, UART1_ER_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrError(&uart1_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrError(&uart1_handle);
 }
 
 //串口2默认连接到无线转串口模块
 IFX_INTERRUPT(uart2_tx_isr, 0, UART2_TX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrTransmit(&uart2_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrTransmit(&uart2_handle);
 }
 IFX_INTERRUPT(uart2_rx_isr, 0, UART2_RX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrReceive(&uart2_handle);
-switch (wireless_type)
-{
-    case WIRELESS_SI24R1 :
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrReceive(&uart2_handle);
+    switch (wireless_type)
     {
-        wireless_uart_callback();
-    }
-        break;
+        case WIRELESS_SI24R1 :
+        {
+            wireless_uart_callback();
+        }
+            break;
 
-    case WIRELESS_CH9141 :
-    {
-        bluetooth_ch9141_uart_callback();
+        case WIRELESS_CH9141 :
+        {
+            bluetooth_ch9141_uart_callback();
+        }
+            break;
+        default :
+            break;
     }
-        break;
-    default :
-        break;
-}
 
 }
 IFX_INTERRUPT(uart2_er_isr, 0, UART2_ER_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrError(&uart2_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrError(&uart2_handle);
 }
 
 IFX_INTERRUPT(uart3_tx_isr, 0, UART3_TX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrTransmit(&uart3_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrTransmit(&uart3_handle);
 }
 IFX_INTERRUPT(uart3_rx_isr, 0, UART3_RX_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrReceive(&uart3_handle);
-if (GPS_TAU1201 == gps_type)
-{
-    gps_uart_callback();
-}
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrReceive(&uart3_handle);
+    if (GPS_TAU1201 == gps_type)
+    {
+        gps_uart_callback();
+    }
 }
 IFX_INTERRUPT(uart3_er_isr, 0, UART3_ER_INT_PRIO)
 {
-enableInterrupts();    //开启中断嵌套
-IfxAsclin_Asc_isrError(&uart3_handle);
+    enableInterrupts();    //开启中断嵌套
+    IfxAsclin_Asc_isrError(&uart3_handle);
 }

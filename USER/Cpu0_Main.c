@@ -175,8 +175,8 @@ int core0_main (void)
                     src_pixel_mat[i][j] = mt9v03x_image[i][j];
                 }
             }
-            //if (location[0] == 3)
-                //SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
+           // if (location[0] == 3)
+             //   SendImg((uint8_t*) src_pixel_mat[0], MT9V03X_W, MT9V03X_H);
             GetHistGram(MT9V03X_W, MT9V03X_H);
             thredshold = OTSUThreshold();
             BinaryzationProcess(MT9V03X_H, MT9V03X_W, thredshold);
@@ -204,6 +204,18 @@ int core0_main (void)
                 pwm_duty(ATOM0_CH7_P02_7, 0);    // 右轮退
             }
 
+            if (road_type == IN_LEFT_ROTARY ||
+                road_type == LEFT_ROTARY_IN_SECOND_SUNKEN ||
+                road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN)
+            {
+                bend_type = LEFT_SHARP_BEND;
+            }
+            else if (road_type == IN_RIGHT_ROTARY ||
+                     road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN ||
+                     road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+            {
+                bend_type = RIGHT_SHARP_BEND;
+            }
             if ((bend_type == NO_BEND || bend_type == LEFT_NORMAL_BEND || bend_type == RIGHT_NORMAL_BEND) && bend_deal._out_bend_count == 0)
             {
                 //SteerPidChange(pid_steer.P, pid_steer.I, pid_steer.D);
@@ -225,7 +237,6 @@ int core0_main (void)
                 road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN ||
                 road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
             {
-                pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
                 pwm_steer *= 1.5;
             }
 
@@ -238,13 +249,55 @@ int core0_main (void)
             else if (steer_pwm < (550))
                 steer_pwm = (550);
 
+            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
+            {
+                left_speed = 250;
+                right_speed = 250;
+                if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
+                {
+                    steer_pwm += 0.5;
+                }
+                else
+                {
+                    steer_pwm -= 0.5;
+                }
+            }
+
             pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
             //pwm_duty(ATOM0_CH4_P02_4, 1000);    // 右轮前进
             //pwm_duty(ATOM0_CH5_P02_5, 1000);    // 左轮前进
             //pwm_duty(ATOM0_CH6_P02_6, 0);    // 右轮前进
             //pwm_duty(ATOM0_CH7_P02_7, 0);    // 左轮前进
-            left_speed = LEFT_SPEED_BASE  - sharp_bend_sub_speed - pwm_steer * diff_speed._left_speed_factor;
-            right_speed = RIGHT_SPEED_BASE - sharp_bend_sub_speed + pwm_steer * diff_speed._right_speed_factor;
+            left_speed = LEFT_SPEED_BASE  - pwm_steer * diff_speed._left_speed_factor;
+            right_speed = RIGHT_SPEED_BASE + pwm_steer * diff_speed._right_speed_factor;
+
+            if (bend_type != NO_BEND)
+            {
+                left_speed -= sharp_bend_sub_speed;
+                right_speed -= sharp_bend_sub_speed;
+            }
+
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+            {
+                left_speed = 260;
+                right_speed = 260;
+            }
+
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN)
+            {
+                right_speed += 30;
+            }
+            else if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
+            {
+                left_speed += 30;
+            }
+
+            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
+            {
+                left_speed = 250;
+                right_speed = 250;
+            }
+
             if (road_type != IN_CARBARN && is_go)
             {
 
@@ -271,11 +324,11 @@ int core0_main (void)
 
             if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
             {
-                //gpio_set(P33_10, 1);
+                gpio_set(P33_10, 1);
             }
             else
             {
-                //gpio_set(P33_10, 0);
+                gpio_set(P33_10, 0);
             }
 
             if (location[0] == 3)
@@ -312,6 +365,6 @@ int core0_main (void)
 //            }
             mt9v03x_finish_flag = 0;
         }
-        //supermonitor();
+        supermonitor();
     }
 }

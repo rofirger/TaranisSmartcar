@@ -12,7 +12,7 @@ extern uint8_t src_pixel_mat[MT9V03X_H][MT9V03X_W];
 extern short hist_gram[256];
 
 // 透视变换矩阵及与透视变换相关
-float perspective_transform_mat[3][3] = {{1.2243, 7.0365, -21.1096}, {0, 9.238, -21.5936}, {0, 0.0748, 1}};
+float perspective_transform_mat[3][3] = {{1.0, 6.003953, 0}, {0, 7.43083, 0}, {0, 0.064559, 1}};
 typedef struct Pos
 {
     short x;
@@ -2965,13 +2965,12 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
         }
         case IN_LEFT_ROTARY :
         {
-            // 预先找突变点，在突变点之前绝不可以出现left_line[x] == right_line[x]的情况
             bool is_fix_out_rotary = false;
             for (int16_t i = src_rows - 6; i > 0 && left_line[i] != right_line[i]; --i)
             {
                 int16_t right_offset_1 = (int16_t) right_line[i] - (int16_t) right_line[i + 3];
                 int16_t right_offset_2 = (int16_t) right_line[i + 1] - (int16_t) right_line[i + 4];
-                if (right_offset_1 > 8 && right_offset_2 > 8 && i > (src_rows >> 1))
+                if (right_offset_1 > 6 && right_offset_2 > 6 && i > (src_rows >> 3))
                 {
                     is_fix_out_rotary = true;
                 }
@@ -2991,7 +2990,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             {
                 int16_t left_offset_1 = (int16_t) left_line[i + 3] - (int16_t) left_line[i];
                 int16_t left_offset_2 = (int16_t) left_line[i + 4] - (int16_t) left_line[i + 1];
-                if (left_offset_1 > 8 && left_offset_2 > 8 && i > (src_rows >> 1))
+                if (left_offset_1 > 6 && left_offset_2 > 6 && i > (src_rows >> 3))
                 {
                     is_fix_out_rotary = true;
                 }
@@ -3215,7 +3214,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
 
             int16_t left_line_zero_min_rows = 0;
             int16_t j = src_rows - 1;
-            float k_out_rotary = 3.9;
+            float k_out_rotary = 4.2;
             float a_out_rotary = (int16_t) src_cols - k_out_rotary * (src_rows - 1);
             for (int16_t i = left_line_zero_min_rows; i < src_rows; ++i)
             {
@@ -3450,7 +3449,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
             }
 
-            float k_out_rotary = -3.9;
+            float k_out_rotary = -4.2;
             float a_out_rotary = -k_out_rotary * (src_rows - 1);
             for (int16_t i = 0; i < src_rows; ++i)
             {
@@ -3950,7 +3949,10 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         {
             _start_cal_offset = src_rows - 10;
         }
-
+        if (road_type == IN_LEFT_ROTARY || road_type == IN_RIGHT_ROTARY)
+        {
+            _start_cal_offset = src_rows >> 1 + 10;
+        }
         for (int j = _start_cal_offset; j < slope_cal._end_cal_y; ++j)
         {
             offset += ((int16_t) (src_cols >> 1) - (int16_t) mid_line_perspective_transform[j].x);
@@ -3975,7 +3977,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
             if (right_line[i] == src_cols - 1)
                 ++no_line;
         }
-        if ((cur_cal_start_point - cur_cal_end_point) - ABS(no_line) < 5 && road_type_for_control == NO_FIX_ROAD)
+        if (bend_type != NO_BEND)
         {
             // 触发急转弯处理
             int _total_right_line_x = 0;
@@ -3987,7 +3989,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                     _total_right_line_x += right_line[_j];
                 }
                 _total_right_line_x -= 1400;
-                //curve += PID_Increase(&error_sharp_bend, &pid_sharp_bend, (float) _total_right_line_x, 0);
+                curve += PID_Increase(&error_sharp_bend, &pid_sharp_bend, (float) _total_right_line_x, 0);
             }
             else
             {
@@ -3998,7 +4000,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                 }
                 //_total_right_line_x -= 1400;
                 _total_right_line_x -= 300;
-                //curve -= PID_Increase(&error_sharp_bend, &pid_sharp_bend, _total_right_line_x, 0);
+                curve -= PID_Increase(&error_sharp_bend, &pid_sharp_bend, _total_right_line_x, 0);
             }
 
             // lcd_showint16(0, 5, _total_right_line_x);
