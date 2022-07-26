@@ -944,8 +944,8 @@ void page_init ()
     str_cpy(page13[0], "Return || Page 4", 16);
     str_cpy(page13[1], "strISP:", 7);
     str_cpy(page13[2], "strISD:", 7);
-    str_cpy(page13[3], "******:", 7);
-    str_cpy(page13[4], "******:", 7);
+    str_cpy(page13[3], "slBDTH:", 7);
+    str_cpy(page13[4], "pwmMAX:", 7);
     str_cpy(page13[5], "******:", 7);
     str_cpy(page13[6], "******:", 7);
     str_cpy(page13[7], "******:", 7);
@@ -1371,6 +1371,8 @@ void GUI_Load_Data ()
     // page4
     pid_steer_in_sharp.P = paraData[27];
     pid_steer_in_sharp.D = paraData[28];
+    slope_in_bend_threshold = paraData[29];
+    max_pwm_steer = paraData[30];
 }
 
 

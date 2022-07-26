@@ -42,6 +42,10 @@ float out_bend_threshold = 0.3;
 int32_t bend_threshold = 30;
 // 直道或者小s完偏差阈值
 float no_bend_offset_threshold = 0.2;
+// 使用处在急转弯中的pid时的斜率阈值
+float slope_in_bend_threshold = 3.2;
+// pwm_steer 过大时的限幅
+float max_pwm_steer = 3.5;
 
 
 /*<!

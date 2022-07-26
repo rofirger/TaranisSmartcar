@@ -54,7 +54,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
             if (bend_type == NO_BEND)
                 target_pwm_left += 1.4 * PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
             else
-                target_pwm_left += 3 * PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
+                target_pwm_left += 4.5 * PID_Increase(&error_motor_left, &pid_motor_left, left_encoder, left_speed);
         }
         if (ABS((int)right_encoder - (int)right_speed) < 20)
         {
@@ -65,7 +65,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
             if (bend_type == NO_BEND)
                 target_pwm_right += 1.4 * PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
             else
-                target_pwm_right += 3 * PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
+                target_pwm_right += 4.5 * PID_Increase(&error_motor_right, &pid_motor_right, right_encoder, right_speed);
         }
 
         if (target_pwm_left > 9000 || target_pwm_left < -9000)

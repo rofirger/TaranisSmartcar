@@ -52,6 +52,10 @@ extern int32_t bend_threshold;
 extern float no_bend_offset_threshold;
 extern BendDeal bend_deal;
 extern int16_t sharp_bend_sub_speed;
+// 使用处在急转弯中的pid时的斜率阈值
+extern float slope_in_bend_threshold;
+ // pwm_steer 过大时的限幅
+extern float max_pwm_steer;
 
 float PID_Increase (Error *sptr, PID *pid, float nowPoint, float targetPoint);
 float PID_Pos (PosErr *sptr, PID *pid, float now_point, float target_point);

@@ -227,7 +227,7 @@ int core0_main (void)
             else
             {
                 //SteerPidChange(pid_steer_sharp.P, pid_steer_sharp.I, pid_steer_sharp.D);
-                if (ABS(slope) < 3.2)
+                if (ABS(slope) < slope_in_bend_threshold)
                     pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
                 else
                     pwm_steer = PID_Pos(&in_sharp_error_steer, &pid_steer_in_sharp, 0, slope);
@@ -239,6 +239,24 @@ int core0_main (void)
                 road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
                 pwm_steer *= 1.5;
+                if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN && pwm_steer < 0.75)
+                {
+                    pwm_steer = 0.75;
+                }
+                if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN && pwm_steer > -0.75)
+                {
+                    pwm_steer = -0.75;
+                }
+            }
+            if (road_type == IN_LEFT_ROTARY)
+            {
+                if (pwm_steer < 0.6)
+                    pwm_steer = 0.6;
+            }
+            if (road_type == IN_RIGHT_ROTARY)
+            {
+                if (pwm_steer > -0.6)
+                    pwm_steer = -0.6;
             }
 
             error_steer.loc_sum = 0;
@@ -254,14 +272,6 @@ int core0_main (void)
             {
                 left_speed = 250;
                 right_speed = 250;
-                if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN)
-                {
-                    steer_pwm += 0.5;
-                }
-                else
-                {
-                    steer_pwm -= 0.5;
-                }
             }
 
             pwm_duty(ATOM0_CH1_P33_9, steer_pwm);      // 550最右, 625中值, 700最左
@@ -269,6 +279,8 @@ int core0_main (void)
             //pwm_duty(ATOM0_CH5_P02_5, 1000);    // 左轮前进
             //pwm_duty(ATOM0_CH6_P02_6, 0);    // 右轮前进
             //pwm_duty(ATOM0_CH7_P02_7, 0);    // 左轮前进
+            if (pwm_steer > max_pwm_steer)
+                pwm_steer = max_pwm_steer;
             left_speed = LEFT_SPEED_BASE  - pwm_steer * diff_speed._left_speed_factor;
             right_speed = RIGHT_SPEED_BASE + pwm_steer * diff_speed._right_speed_factor;
 
@@ -325,11 +337,11 @@ int core0_main (void)
 
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
-                gpio_set(P33_10, 1);
+                //gpio_set(P33_10, 1);
             }
             else
             {
-                gpio_set(P33_10, 0);
+                //gpio_set(P33_10, 0);
             }
 
             if (location[0] == 3)

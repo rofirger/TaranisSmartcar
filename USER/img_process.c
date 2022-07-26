@@ -3082,8 +3082,8 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 // 寻找是否真的已经进入环道
                 for (int16_t _i = src_rows - 2; _i > 3 && (left_line[_i] != right_line[_i]); --_i)
                 {
-                    if (left_consecutive_point_offset[_i] < -6 &&
-                    ABS(left_consecutive_point_offset[_i - 3]) < 5 && (left_line[_i - 3] != right_line[_i - 3]))
+                    if (left_consecutive_point_offset[_i] < -10 &&
+                     (left_line[_i - 3] != right_line[_i - 3]))
                     {
                         fix_left_tail.pos_col = _i;
                         fix_left_tail.fix_point_type = CLIFF;
@@ -3095,16 +3095,18 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             }
             if (go_in_rotary_stage_left == 1 && fix_right_tail.pos_col == NO_DEFINE_VALUE)
             {
+                gpio_set(P33_10, 0);
                 // 寻找是否真的已经进入环道
                 for (int16_t _i = src_rows - 2; _i > 3 && (left_line[_i] != right_line[_i]); --_i)
                 {
-                    if (right_consecutive_point_offset[_i] > 6 &&
-                    ABS(right_consecutive_point_offset[_i - 3]) < 5 && (left_line[_i - 3] != right_line[_i - 3]))
+                    if (right_consecutive_point_offset[_i] > 10 &&
+                     (left_line[_i - 3] != right_line[_i - 3]))
                     {
                         fix_right_tail.pos_col = _i;
                         fix_right_tail.fix_point_type = CLIFF;
                         fix_right_head.pos_col = src_rows - 1;
-                        fix_right_head.fix_point_type = ARC_LEFT;
+                        fix_right_head.fix_point_type = ARC_RIGHT;
+                        gpio_set(P33_10, 1);
                         break;
                     }
                 }
@@ -3231,8 +3233,8 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     }
                 }
                 // 重新找中线
-                int16_t mid_point = top_angle_cols - 6;
-                for (int16_t _j = top_angle_rows; _j >= 0; --_j)
+                int16_t mid_point = left_line[src_rows - 1] + 10;;
+                for (int16_t _j = src_rows - 1; _j >= 0; --_j)
                 {
                     int16_t cur_point = mid_point;
                     // 扫描左线
@@ -3262,7 +3264,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         }
                         ++cur_point;
                     }
-                    mid_point = (right_line[_j] + left_line[_j]) / 2;
+                    mid_point = left_line[_j] + 10;
                 }
             }
             else
@@ -3863,8 +3865,8 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         // float curve = CurvatureCal(mid_line, quadratic_start_index, quadratic_end_index);
         // 急转弯识别
         bend_type = NO_BEND;
-        if ((road_type_for_control == NO_FIX_ROAD || road_type_for_control == IN_LEFT_ROTARY
-                || road_type_for_control == IN_RIGHT_ROTARY) && end_src_rows > 3 &&
+        if ((road_type == NO_FIX_ROAD || road_type == IN_LEFT_ROTARY
+                || road_type == IN_RIGHT_ROTARY) && end_src_rows > 3 &&
         ABS(right_line[end_src_rows] - (int16_t)left_line[end_src_rows]) < 3 &&
         ABS(right_line[end_src_rows - 1] - (int16_t)left_line[end_src_rows - 1]) < 3 &&
         ABS(right_line[end_src_rows - 2] - (int16_t)left_line[end_src_rows - 2]) < 3)
