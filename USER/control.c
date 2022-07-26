@@ -13,13 +13,12 @@ PID pid_steer_standard =  {0.830, 0, 4.125};
 
 PID pid_steer = {0.28, 0, 0};
 PID pid_steer_sharp = {0.5, 0, 0};
-
-
-
+// 在急转弯里面的pid
+PID pid_steer_in_sharp = {0.5, 0, 0};
 
 PosErr error_steer = {{0, 0, 0}, 0};
 PosErr sharp_error_steer = {{0, 0, 0}, 0};
-
+PosErr in_sharp_error_steer = {{0, 0, 0}, 0};
 
 // 电机PID
 PID pid_motor_standrd = {5.2,2,0};

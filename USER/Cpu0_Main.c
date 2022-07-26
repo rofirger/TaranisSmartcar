@@ -227,15 +227,16 @@ int core0_main (void)
             else
             {
                 //SteerPidChange(pid_steer_sharp.P, pid_steer_sharp.I, pid_steer_sharp.D);
-                pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
+                if (ABS(slope) < 3.2)
+                    pwm_steer = PID_Pos(&sharp_error_steer, &pid_steer_sharp, 0, slope);
+                else
+                    pwm_steer = PID_Pos(&in_sharp_error_steer, &pid_steer_in_sharp, 0, slope);
                 gpio_set(P21_5, 1);
             }
 
             // ·ÖÂ·¶Î
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN ||
-                road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN ||
-                road_type == LEFT_ROTARY_OUT_FIRST_SUNKEN ||
-                road_type == RIGHT_ROTARY_OUT_FIRST_SUNKEN)
+                road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
                 pwm_steer *= 1.5;
             }
@@ -279,23 +280,23 @@ int core0_main (void)
 
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
-                left_speed = 260;
-                right_speed = 260;
+                left_speed = 220;
+                right_speed = 220;
             }
 
             if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN)
             {
-                right_speed += 30;
+                right_speed += 90;
             }
             else if (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
-                left_speed += 30;
+                left_speed += 90;
             }
 
             if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
             {
-                left_speed = 250;
-                right_speed = 250;
+                left_speed = 230;
+                right_speed = 230;
             }
 
             if (road_type != IN_CARBARN && is_go)
@@ -322,7 +323,7 @@ int core0_main (void)
                 //pwm_duty(ATOM0_CH7_P02_7,0);
             }
 
-            if (road_type == LEFT_ROTARY_IN_FIRST_SUNKEN || road_type == RIGHT_ROTARY_IN_FIRST_SUNKEN)
+            if (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN)
             {
                 gpio_set(P33_10, 1);
             }
@@ -336,7 +337,7 @@ int core0_main (void)
                 for (int i = 0; i < MT9V03X_H; ++i)
                 {
                     src_pixel_mat[i][left_line[i]] = 0;
-                    src_pixel_mat[i][mid_line[i]] = 0;
+                    src_pixel_mat[i][mid_line[i]] = 255;
                     src_pixel_mat[i][right_line[i]] = 0;
                     if (i == slope_cal._start_cal_y || i == sharp_slope_cal._start_cal_y)
                     {

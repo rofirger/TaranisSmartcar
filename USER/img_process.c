@@ -1,5 +1,6 @@
 #include "img_process.h"
 #include "control.h"
+#include "TFT_GUI.h"
 // 中线与屏幕中央的偏差
 Offset mid_offset;
 SlopeCal slope_cal = {._slope = 0, ._end_cal_y = MT9V03X_H - 1, ._start_cal_y = (MT9V03X_H >> 2) * 3 - 15};
@@ -744,7 +745,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             || road_type == LEFT_ROTARY_IN_SECOND_SUNKEN || road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN
             || road_type == IN_LEFT_JUNCTION_ING || road_type == IN_RIGHT_JUNCTION_ING
             || road_type == OUT_LEFT_JUNCTION_ING || road_type == OUT_RIGHT_JUNCTION_ING
-            || road_type == IN_LEFT_JUNCTION_ED || road_type == IN_RIGHT_JUNCTION_ED)
+            || road_type == IN_LEFT_JUNCTION_ED || road_type == IN_RIGHT_JUNCTION_ED || road_type == IN_LEFT_ROTARY)
     {
         int16_t mid_point = (right_line[src_rows - 1] + left_line[src_rows - 1]) / 2;
         for (int16_t i = src_rows - 2; i >= 0; --i)
@@ -787,7 +788,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     || (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_right == 0)
                     || (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_left == 1)
                     || road_type == IN_RIGHT_JUNCTION_ING || road_type == OUT_RIGHT_JUNCTION_ING
-                    || road_type == IN_RIGHT_JUNCTION_ED)
+                    || road_type == IN_RIGHT_JUNCTION_ED || road_type == IN_LEFT_ROTARY)
             {
                 mid_point = left_line[i] + 15;
             }
@@ -1232,7 +1233,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         || (road_type == LEFT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_left == 0))
                         && (left_consecutive_point_offset[i] <= 0 && left_consecutive_point_offset[i + 1] <= 0
                                 && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -20))
-                        || (go_in_rotary_stage_left == 1
+                        || (go_in_rotary_stage_right == 1
                                 && (left_consecutive_point_offset[i] <= 0 && left_consecutive_point_offset[i + 1] <= 0
                                         && left_consecutive_point_offset[i] + left_consecutive_point_offset[i + 1] < -20)))
                 {
@@ -1678,7 +1679,7 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         || (road_type == RIGHT_ROTARY_IN_SECOND_SUNKEN && go_in_rotary_stage_right == 0))
                         && (right_consecutive_point_offset[i] >= 0 && right_consecutive_point_offset[i + 1] >= 0
                                 && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1] > 20))
-                        || (go_in_rotary_stage_right == 1
+                        || (go_in_rotary_stage_left == 1
                                 && (right_consecutive_point_offset[i] >= 0 && right_consecutive_point_offset[i + 1] >= 0
                                         && right_consecutive_point_offset[i] + right_consecutive_point_offset[i + 1]
                                                 > 20)))
@@ -1817,11 +1818,11 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
      }*/
 
     road_type_for_control = road_type;
-//    if (location[0] == 3)
-//    {
-//        lcd_showint16(0, 8, fix_left_tail.fix_point_type);
-//        lcd_showint16(50, 8, fix_left_tail.fix_point_type);
-//    }
+    if (location[0] == 3)
+    {
+        lcd_showint16(0, 8, fix_left_tail.fix_point_type);
+        lcd_showint16(50, 8, fix_left_tail.fix_point_type);
+    }
     switch (road_type)
     {
         case OUT_CARBARN :
@@ -3024,44 +3025,118 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     fix_left_head.pos_col = NO_DEFINE_VALUE;
                 }
                 else if (fix_left_head.fix_point_type == ARC_LEFT && fix_left_tail.fix_point_type == CLIFF
-                        && fix_left_tail.pos_col > 6)
+                        && fix_left_tail.pos_col > 12)
                 {
-                    // 往摄像头方向找最大的落差(负值，绝对值最大)
-                    Pos _min_offset = {.x = left_consecutive_point_offset[fix_left_tail.pos_col], .y =
-                            fix_left_tail.pos_col};
-                    for (int16_t _i = fix_left_tail.pos_col;
-                            _i < src_rows - 1 && left_consecutive_point_offset[_i] <= 0; ++_i)
+                    // 需检验
+                    bool _is_fit = true;
+                    if (fix_left_tail.fix_point_type == CLIFF)
                     {
-                        if (left_consecutive_point_offset[_i] < _min_offset.x)
+                        // 远离摄像头必须不能存在大幅度正落差的点
+                        for (int16_t _i = fix_left_tail.pos_col; _i > fix_left_tail.pos_col - 5; --_i)
                         {
-                            _min_offset.x = left_consecutive_point_offset[_i];
-                            _min_offset.y = _i;
-                        }
-                    }
-                    int16_t _num_have_white = 0;
-                    for (int16_t _j = fix_left_tail.pos_col; _j <= _min_offset.y; ++_j)
-                    {
-                        for (int16_t _k = left_line[_j]; _k >= 2; --_k)
-                        {
-                            if (src_pixel_mat[_j][_k] > threshold_val && src_pixel_mat[_j][_k - 1] > threshold_val
-                                    && src_pixel_mat[_j][_k - 2] > threshold_val)
+                            if (left_consecutive_point_offset[_i] > 10 && left_consecutive_point_offset[_i - 1] > 10)
                             {
-                                _num_have_white++;
+                                _is_fit = false;
+                                break;
                             }
                         }
                     }
-                    //if (_num_have_white < 3)
-                    road_type = LEFT_ROTARY_IN_SECOND_SUNKEN;
+                    if (_is_fit)
+                    {
+                        // 往摄像头方向找最大的落差(负值，绝对值最大)
+                        Pos _min_offset = {.x = left_consecutive_point_offset[fix_left_tail.pos_col], .y =
+                                fix_left_tail.pos_col};
+                        for (int16_t _i = fix_left_tail.pos_col;
+                                _i < src_rows - 1 && left_consecutive_point_offset[_i] <= 0; ++_i)
+                        {
+                            if (left_consecutive_point_offset[_i] < _min_offset.x)
+                            {
+                                _min_offset.x = left_consecutive_point_offset[_i];
+                                _min_offset.y = _i;
+                            }
+                        }
+                        int16_t _num_have_white = 0;
+                        for (int16_t _j = fix_left_tail.pos_col; _j <= _min_offset.y; ++_j)
+                        {
+                            for (int16_t _k = left_line[_j]; _k >= 2; --_k)
+                            {
+                                if (src_pixel_mat[_j][_k] > threshold_val && src_pixel_mat[_j][_k - 1] > threshold_val
+                                        && src_pixel_mat[_j][_k - 2] > threshold_val)
+                                {
+                                    _num_have_white++;
+                                }
+                            }
+                        }
+                        //if (_num_have_white < 3)
+                        road_type = LEFT_ROTARY_IN_SECOND_SUNKEN;
+                    }
                 }
             }
             break;
         }
         case LEFT_ROTARY_IN_SECOND_SUNKEN :
         {
-            if (fix_left_tail.pos_col != NO_DEFINE_VALUE)
+            static bool _is_fix_tail_type_cliff = false;
+            if (go_in_rotary_stage_left == 0 && fix_left_tail.pos_col == NO_DEFINE_VALUE)
             {
-                if (go_in_rotary_stage_left == 0 && fix_left_tail.fix_point_type == CLIFF)
+                // 寻找是否真的已经进入环道
+                for (int16_t _i = src_rows - 2; _i > 3 && (left_line[_i] != right_line[_i]); --_i)
                 {
+                    if (left_consecutive_point_offset[_i] < -6 &&
+                    ABS(left_consecutive_point_offset[_i - 3]) < 5 && (left_line[_i - 3] != right_line[_i - 3]))
+                    {
+                        fix_left_tail.pos_col = _i;
+                        fix_left_tail.fix_point_type = CLIFF;
+                        fix_left_head.pos_col = src_rows - 1;
+                        fix_left_head.fix_point_type = ARC_LEFT;
+                        break;
+                    }
+                }
+            }
+            if (go_in_rotary_stage_left == 1 && fix_right_tail.pos_col == NO_DEFINE_VALUE)
+            {
+                // 寻找是否真的已经进入环道
+                for (int16_t _i = src_rows - 2; _i > 3 && (left_line[_i] != right_line[_i]); --_i)
+                {
+                    if (right_consecutive_point_offset[_i] > 6 &&
+                    ABS(right_consecutive_point_offset[_i - 3]) < 5 && (left_line[_i - 3] != right_line[_i - 3]))
+                    {
+                        fix_right_tail.pos_col = _i;
+                        fix_right_tail.fix_point_type = CLIFF;
+                        fix_right_head.pos_col = src_rows - 1;
+                        fix_right_head.fix_point_type = ARC_LEFT;
+                        break;
+                    }
+                }
+            }
+
+            if (go_in_rotary_stage_left == 0 && fix_left_tail.pos_col != NO_DEFINE_VALUE)
+            {
+
+                if (_is_fix_tail_type_cliff && fix_left_tail.fix_point_type == ARC_LEFT)
+                    fix_left_tail.fix_point_type = CLIFF;
+                if (fix_left_tail.fix_point_type == CLIFF)
+                {
+                    _is_fix_tail_type_cliff = true;
+                    // 修正fix_left_tail
+                    if (ABS((int)left_consecutive_point_offset[fix_left_tail.pos_col]) < 5)
+                    {
+                        Pos _fit_point = {.x = left_consecutive_point_offset[fix_left_tail.pos_col], .y =
+                                fix_left_tail.pos_col};
+                        for (int16_t _j = fix_left_tail.pos_col; _j < fix_left_tail.pos_col + 20 && _j < src_rows - 1;
+                                ++_j)
+                        {
+                            if (left_consecutive_point_offset[_j] < -5)
+                            {
+                                if (left_consecutive_point_offset[_j] < _fit_point.x)
+                                {
+                                    _fit_point.x = left_consecutive_point_offset[_j];
+                                    _fit_point.y = _j;
+                                }
+                            }
+                        }
+                        fix_left_tail.pos_col = _fit_point.y;
+                    }
                     // 引导线
                     int16_t top_angle_rows = fix_left_tail.pos_col;
                     int16_t top_angle_cols = left_line[top_angle_rows] - 16;
@@ -3116,60 +3191,83 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                         mid_point = (right_line[_j] + left_line[_j]) / 2;
                     }
                 }
-                else if (go_in_rotary_stage_left == 1 && fix_right_tail.fix_point_type == CLIFF)
+            }
+
+            else if (go_in_rotary_stage_left == 1 && fix_right_tail.pos_col != NO_DEFINE_VALUE
+                    && (fix_right_tail.fix_point_type == CLIFF || fix_right_tail.fix_point_type == ARC_RIGHT))
+            {
+                // 修正fix_right_tail
+                if (ABS((int)right_consecutive_point_offset[fix_right_tail.pos_col]) < 5)
                 {
-                    int16_t top_angle_rows = fix_right_tail.pos_col;
-                    int16_t top_angle_cols = right_line[top_angle_rows] - 16;
-                    int16_t buttom_angle_rows = src_rows - 1;
-                    int16_t button_angle_cols = right_line[buttom_angle_rows];
-                    float k = (float) (top_angle_cols - button_angle_cols) / (top_angle_rows - buttom_angle_rows);
-                    float line_a = top_angle_cols - top_angle_rows * k;
-                    for (int16_t j = top_angle_rows; j < src_rows; ++j)
+                    Pos _fit_point = {.x = right_consecutive_point_offset[fix_right_tail.pos_col], .y =
+                            fix_right_tail.pos_col};
+                    for (int16_t _j = fix_right_tail.pos_col; _j < fix_right_tail.pos_col + 20 && _j < src_rows - 1;
+                            ++_j)
                     {
-                        int temp = k * j + line_a;
-                        if (temp >= 0 && temp < src_cols)
+                        if (right_consecutive_point_offset[_j] > 5)
                         {
-                            right_line[j] = temp;
+                            if (right_consecutive_point_offset[_j] > _fit_point.x)
+                            {
+                                _fit_point.x = right_consecutive_point_offset[_j];
+                                _fit_point.y = _j;
+                            }
                         }
                     }
-                    // 重新找中线
-                    int16_t mid_point = top_angle_cols - 6;
-                    for (int16_t _j = top_angle_rows; _j >= 0; --_j)
+                    fix_right_tail.pos_col = _fit_point.y;
+                }
+
+                int16_t top_angle_rows = fix_right_tail.pos_col;
+                int16_t top_angle_cols = right_line[top_angle_rows] - 16;
+                int16_t buttom_angle_rows = src_rows - 1;
+                int16_t button_angle_cols = right_line[buttom_angle_rows];
+                float k = (float) (top_angle_cols - button_angle_cols) / (top_angle_rows - buttom_angle_rows);
+                float line_a = top_angle_cols - top_angle_rows * k;
+                for (int16_t j = top_angle_rows; j < src_rows; ++j)
+                {
+                    int temp = k * j + line_a;
+                    if (temp >= 0 && temp < src_cols)
                     {
-                        int16_t cur_point = mid_point;
-                        // 扫描左线
-                        while (cur_point - 2 > 0)
-                        {
-                            left_line[_j] = 0;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point - 2] < threshold_val)
-                            {
-                                left_line[_j] = cur_point;
-                                break;
-                            }
-                            --cur_point;
-                        }
-                        // 扫描右线
-                        cur_point = mid_point;
-                        while (cur_point + 2 < src_cols)
-                        {
-                            right_line[_j] = src_cols - 1;
-                            if (src_pixel_mat[_j][cur_point] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 1] < threshold_val
-                                    && src_pixel_mat[_j][cur_point + 2] < threshold_val)
-                            {
-                                right_line[_j] = cur_point;
-                                break;
-                            }
-                            ++cur_point;
-                        }
-                        mid_point = (right_line[_j] + left_line[_j]) / 2;
+                        right_line[j] = temp;
                     }
+                }
+                // 重新找中线
+                int16_t mid_point = top_angle_cols - 6;
+                for (int16_t _j = top_angle_rows; _j >= 0; --_j)
+                {
+                    int16_t cur_point = mid_point;
+                    // 扫描左线
+                    while (cur_point - 2 > 0)
+                    {
+                        left_line[_j] = 0;
+                        if (src_pixel_mat[_j][cur_point] < threshold_val
+                                && src_pixel_mat[_j][cur_point - 1] < threshold_val
+                                && src_pixel_mat[_j][cur_point - 2] < threshold_val)
+                        {
+                            left_line[_j] = cur_point;
+                            break;
+                        }
+                        --cur_point;
+                    }
+                    // 扫描右线
+                    cur_point = mid_point;
+                    while (cur_point + 2 < src_cols)
+                    {
+                        right_line[_j] = src_cols - 1;
+                        if (src_pixel_mat[_j][cur_point] < threshold_val
+                                && src_pixel_mat[_j][cur_point + 1] < threshold_val
+                                && src_pixel_mat[_j][cur_point + 2] < threshold_val)
+                        {
+                            right_line[_j] = cur_point;
+                            break;
+                        }
+                        ++cur_point;
+                    }
+                    mid_point = (right_line[_j] + left_line[_j]) / 2;
                 }
             }
             else
             {
+                _is_fix_tail_type_cliff = false;
                 road_type = IN_LEFT_ROTARY;
                 go_in_rotary_stage_left = 0;
             }
@@ -3261,34 +3359,51 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                     fix_right_head.pos_col = NO_DEFINE_VALUE;
                 }
                 else if (fix_right_head.fix_point_type == ARC_RIGHT && fix_right_tail.fix_point_type == CLIFF
-                        && fix_right_tail.pos_col > 6)
+                        && fix_right_tail.pos_col > 12)
                 {
-                    // 往摄像头方向找最大的落差(正值，绝对值最大)
-                    Pos _max_offset = {.x = right_consecutive_point_offset[fix_right_tail.pos_col], .y =
-                            fix_right_tail.pos_col};
-                    for (int16_t _i = fix_right_tail.pos_col;
-                            _i < src_rows - 1 && right_consecutive_point_offset[_i] <= 0; ++_i)
+                    // 需检验
+                    bool _is_fit = true;
+                    if (fix_right_tail.fix_point_type == CLIFF)
                     {
-                        if (right_consecutive_point_offset[_i] > _max_offset.x)
+                        // 远离摄像头必须不能存在大幅度负落差的点
+                        for (int16_t _i = fix_right_tail.pos_col; _i > fix_right_tail.pos_col - 5; --_i)
                         {
-                            _max_offset.x = right_consecutive_point_offset[_i];
-                            _max_offset.y = _i;
-                        }
-                    }
-                    int16_t _num_have_white = 0;
-                    for (int16_t _j = fix_right_tail.pos_col; _j <= _max_offset.y; ++_j)
-                    {
-                        for (int16_t _k = right_line[_j]; _k < src_cols - 2; ++_k)
-                        {
-                            if (src_pixel_mat[_j][_k] > threshold_val && src_pixel_mat[_j][_k + 1] > threshold_val
-                                    && src_pixel_mat[_j][_k + 2] > threshold_val)
+                            if (right_consecutive_point_offset[_i] < -10 && right_consecutive_point_offset[_i - 1] < -10)
                             {
-                                _num_have_white++;
+                                _is_fit = false;
+                                break;
                             }
                         }
                     }
-                    //if (_num_have_white < 3)
-                    road_type = RIGHT_ROTARY_IN_SECOND_SUNKEN;
+                    if (_is_fit)
+                    {
+                        // 往摄像头方向找最大的落差(正值，绝对值最大)
+                        Pos _max_offset = {.x = right_consecutive_point_offset[fix_right_tail.pos_col], .y =
+                                fix_right_tail.pos_col};
+                        for (int16_t _i = fix_right_tail.pos_col;
+                                _i < src_rows - 1 && right_consecutive_point_offset[_i] <= 0; ++_i)
+                        {
+                            if (right_consecutive_point_offset[_i] > _max_offset.x)
+                            {
+                                _max_offset.x = right_consecutive_point_offset[_i];
+                                _max_offset.y = _i;
+                            }
+                        }
+                        int16_t _num_have_white = 0;
+                        for (int16_t _j = fix_right_tail.pos_col; _j <= _max_offset.y; ++_j)
+                        {
+                            for (int16_t _k = right_line[_j]; _k < src_cols - 2; ++_k)
+                            {
+                                if (src_pixel_mat[_j][_k] > threshold_val && src_pixel_mat[_j][_k + 1] > threshold_val
+                                        && src_pixel_mat[_j][_k + 2] > threshold_val)
+                                {
+                                    _num_have_white++;
+                                }
+                            }
+                        }
+                        //if (_num_have_white < 3)
+                        road_type = RIGHT_ROTARY_IN_SECOND_SUNKEN;
+                    }
                 }
             }
             break;
@@ -3299,6 +3414,26 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
             {
                 if (go_in_rotary_stage_right == 0 && fix_right_tail.fix_point_type == CLIFF)
                 {
+                    // 修正fix_right_tail
+                    if (ABS((int)right_consecutive_point_offset[fix_right_tail.pos_col]) < 5)
+                    {
+                        Pos _fit_point = {.x = right_consecutive_point_offset[fix_right_tail.pos_col], .y =
+                                fix_right_tail.pos_col};
+                        for (int16_t _j = fix_right_tail.pos_col; _j < fix_right_tail.pos_col + 20 && _j < src_rows - 1;
+                                ++_j)
+                        {
+                            if (right_consecutive_point_offset[_j] > 5)
+                            {
+                                if (right_consecutive_point_offset[_j] > _fit_point.x)
+                                {
+                                    _fit_point.x = right_consecutive_point_offset[_j];
+                                    _fit_point.y = _j;
+                                }
+                            }
+                        }
+                        fix_right_tail.pos_col = _fit_point.y;
+                    }
+
                     // 引导线
                     int16_t top_angle_rows = fix_right_tail.pos_col;
                     int16_t top_angle_cols = right_line[top_angle_rows] + 16;
@@ -3355,6 +3490,26 @@ void FixRoad (uint8_t *left_line, uint8_t *right_line, uint8_t src_rows, uint8_t
                 }
                 else if (go_in_rotary_stage_right == 1 && fix_left_tail.fix_point_type == CLIFF)
                 {
+                    // 修正fix_left_tail
+                    if (ABS((int)left_consecutive_point_offset[fix_left_tail.pos_col]) < 5)
+                    {
+                        Pos _fit_point = {.x = left_consecutive_point_offset[fix_left_tail.pos_col], .y =
+                                fix_left_tail.pos_col};
+                        for (int16_t _j = fix_left_tail.pos_col; _j < fix_left_tail.pos_col + 20 && _j < src_rows - 1;
+                                ++_j)
+                        {
+                            if (left_consecutive_point_offset[_j] < -5)
+                            {
+                                if (left_consecutive_point_offset[_j] < _fit_point.x)
+                                {
+                                    _fit_point.x = left_consecutive_point_offset[_j];
+                                    _fit_point.y = _j;
+                                }
+                            }
+                        }
+                        fix_left_tail.pos_col = _fit_point.y;
+                    }
+
                     int16_t top_angle_rows = fix_left_tail.pos_col;
                     int16_t top_angle_cols = left_line[top_angle_rows] + 16;
                     int16_t buttom_angle_rows = src_rows - 1;
@@ -3526,8 +3681,8 @@ uint8_t FindStraightLine(size_t *mid_line, size_t src_rows, size_t src_cols, std
 uint8_t FindStraightLine (uint8_t *mid_line, uint8_t src_rows, uint8_t src_cols)
 #endif // LOWER_COMPUTER
 {
-    // Hough 变换: r = x * cos(angle) + y * sin(angle)
-    // 对中线前一段进行霍夫变换
+// Hough 变换: r = x * cos(angle) + y * sin(angle)
+// 对中线前一段进行霍夫变换
     StraightLineCoeffic straight_line_coeffic = LinearRegress(mid_line, src_rows - 5, src_rows - 1);
     float k = straight_line_coeffic.k;
     float angle = atan(-k);
@@ -3607,7 +3762,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
     uint8_t end_line_right = 0;
     uint8_t start_line_left = 0;
     uint8_t end_line_left = 0;
-    // CorrectLRLine(left_line, right_line, src_rows, src_cols);
+// CorrectLRLine(left_line, right_line, src_rows, src_cols);
     for (uint8_t i = src_rows - 1; i >= 2; --i)
     {
         if (right_line[i] != src_cols - 1 && right_line[i - 1] != src_cols - 1 && right_line[i - 2] != src_cols - 1
@@ -3636,7 +3791,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         CHECK_RANGE(right_line[i], 0, src_cols, user_data_for_output);
 #endif // UPPER_COMPUTER
     }
-    // 注意end_continue_line 小于或等于 start_continue_line
+// 注意end_continue_line 小于或等于 start_continue_line
     uint8_t end_continue_line = 0;
     uint8_t start_continue_line =
             start_line_right - end_line_right > start_line_left - end_line_left ?
@@ -3646,7 +3801,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
 
     uint16_t quadratic_start_index = 0;
     uint16_t quadratic_end_index = 0;
-    // 假如start_line 过小(小于某个阈值), 那么可以看为目前小车所在的路段无左右边线, 舵机保持角度
+// 假如start_line 过小(小于某个阈值), 那么可以看为目前小车所在的路段无左右边线, 舵机保持角度
     if (start_continue_line >= MIN_START_CONTINUE_LINE && start_continue_line > end_continue_line)
     {
         // 是否存在直线
@@ -3949,10 +4104,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
         {
             _start_cal_offset = src_rows - 10;
         }
-        if (road_type == IN_LEFT_ROTARY || road_type == IN_RIGHT_ROTARY)
-        {
-            _start_cal_offset = src_rows >> 1 + 10;
-        }
+
         for (int j = _start_cal_offset; j < slope_cal._end_cal_y; ++j)
         {
             offset += ((int16_t) (src_cols >> 1) - (int16_t) mid_line_perspective_transform[j].x);
@@ -3968,17 +4120,17 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
 //                        * (mid_line_perspective_transform[(cur_cal_start_point)].y
 //                                - mid_line_perspective_transform[(cur_cal_end_point)].y)));
 
-        // 检测是否缺线, 右正，左负
-        int16_t no_line = 0;
-        for (int16_t i = cur_cal_start_point; i >= cur_cal_end_point; --i)
-        {
-            if (left_line[i] == 0)
-                --no_line;
-            if (right_line[i] == src_cols - 1)
-                ++no_line;
-        }
         if (bend_type != NO_BEND)
         {
+            // 检测是否缺线, 右正，左负
+            int16_t no_line = 0;
+            for (int16_t i = cur_cal_start_point; i >= cur_cal_end_point; --i)
+            {
+                if (left_line[i] == 0)
+                    --no_line;
+                if (right_line[i] == src_cols - 1)
+                    ++no_line;
+            }
             // 触发急转弯处理
             int _total_right_line_x = 0;
             if (no_line < 0)
@@ -3988,7 +4140,7 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                 {
                     _total_right_line_x += right_line[_j];
                 }
-                _total_right_line_x -= 1400;
+                _total_right_line_x -= 1120;
                 curve += PID_Increase(&error_sharp_bend, &pid_sharp_bend, (float) _total_right_line_x, 0);
             }
             else
@@ -3999,11 +4151,11 @@ void UserProcess (uint8_t *left_line, uint8_t *mid_line, uint8_t *right_line, ui
                     _total_right_line_x += left_line[_j];
                 }
                 //_total_right_line_x -= 1400;
-                _total_right_line_x -= 300;
+                _total_right_line_x -= 520;
                 curve -= PID_Increase(&error_sharp_bend, &pid_sharp_bend, _total_right_line_x, 0);
             }
-
-            // lcd_showint16(0, 5, _total_right_line_x);
+            //lcd_showstr(45, 7, "R");
+            //lcd_showint16(55, 7, _total_right_line_x);
         }
         //curve *= (1.878 * ABS((float )no_line / (float )(cur_cal_start_point - cur_cal_end_point)));
         slope_cal._slope = curve;

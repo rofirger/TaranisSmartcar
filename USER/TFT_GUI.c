@@ -942,8 +942,8 @@ void page_init ()
     str_cpy(page12[9], "******:", 7);
 #if TotalParaNumber>27
     str_cpy(page13[0], "Return || Page 4", 16);
-    str_cpy(page13[1], "******:", 7);
-    str_cpy(page13[2], "******:", 7);
+    str_cpy(page13[1], "strISP:", 7);
+    str_cpy(page13[2], "strISD:", 7);
     str_cpy(page13[3], "******:", 7);
     str_cpy(page13[4], "******:", 7);
     str_cpy(page13[5], "******:", 7);
@@ -1367,6 +1367,10 @@ void GUI_Load_Data ()
     out_bend_threshold = paraData[23];
     no_bend_offset_threshold = paraData[24];
     sharp_bend_sub_speed = paraData[25];
+
+    // page4
+    pid_steer_in_sharp.P = paraData[27];
+    pid_steer_in_sharp.D = paraData[28];
 }
 
 

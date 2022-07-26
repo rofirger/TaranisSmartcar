@@ -18,8 +18,11 @@ typedef struct DiffSpeed
 // ¶æ»úPD
 extern PID pid_steer;
 extern PID pid_steer_sharp;
+extern PID pid_steer_in_sharp;
 extern PosErr error_steer;
 extern PosErr sharp_error_steer;
+extern PosErr in_sharp_error_steer;
+
 // µç»úPID
 extern PID pid_motor_left;
 extern Error error_motor_left;
